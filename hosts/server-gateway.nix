@@ -8,7 +8,7 @@ let
 	main-desktop_pubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHm3/himFHzpu+B5N9uB7QEafkYrUmXfPatEQgKcSWJ2 main-desktop";
 in
 {
-       boot =
+	boot =
 	{
 		initrd =
 		{
@@ -47,7 +47,6 @@ in
 			};
 			network =
 			{
-		nginx = 
 				ssh =
 				{
 					enable = true;
@@ -135,6 +134,25 @@ in
 			[
 				"compress=zstd"
 				"noatime"
+			];
+		};
+	};
+
+	filesystems =
+	{
+		"/" =
+		{
+			device = "/dev/mapper/cryptroot";
+			fsType = "ext4";
+		};
+		"/boot" =
+		{
+			device = "/dev/disk/by-uuid/0239-73C4";
+			fsType = "vfat";
+			options =
+			[
+				"fmask=0077"
+				"dmask=0077"
 			];
 		};
 	};
