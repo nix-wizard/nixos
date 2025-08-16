@@ -38,7 +38,6 @@
 				modules =
 				[
 					./configuration.nix
-					./hardware-configuration.nix
 					./hosts/server-gateway.nix
 					copyparty.nixosModules.default
 					agenix.nixosModules.default

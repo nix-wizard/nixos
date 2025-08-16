@@ -2,6 +2,7 @@
 	config,
 	lib,
 	pkgs,
+	modulesPath,
 	...
 }:
 let
@@ -138,7 +139,7 @@ in
 		};
 	};
 
-	filesystems =
+	fileSystems =
 	{
 		"/" =
 		{
@@ -350,6 +351,13 @@ in
 				libvdpau-va-gl
 			];
 		};
+		cpu =
+		{
+			intel =
+			{
+				updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+			};
+		};
 		enableRedistributableFirmware = true;
 	};
 
@@ -359,6 +367,11 @@ in
 		[
 			copyparty
 		];
+	};
+
+	nixpkgs =
+	{
+		hostPlatform = lib.mkDefault "x86_64-linux";
 	};
 
 	system =

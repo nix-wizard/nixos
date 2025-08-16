@@ -21,9 +21,9 @@
 			};
 		};
 	};
+
 	imports =
 	[
-		./hardware-configuration.nix
 	];
 
 	i18n =
