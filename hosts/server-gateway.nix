@@ -10,19 +10,6 @@ in
 {
        boot =
 	{
-		loader =
-		{
-			efi =
-			{
-				canTouchEfiVariables = true;
-			};
-			grub =
-			{
-				enable = true;
-				device = "nodev";
-				efiSupport = true;
-			};
-		};
 		initrd =
 		{
 			availableKernelModules =
@@ -60,6 +47,7 @@ in
 			};
 			network =
 			{
+		nginx = 
 				ssh =
 				{
 					enable = true;
