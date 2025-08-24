@@ -54,6 +54,7 @@
 			cryptsetup
 			btrfs-progs
 			pciutils
+			net-tools
 		];
 		variables =
 		{
@@ -76,6 +77,11 @@
 				init =
 				{
 					defaultBranch = "main";
+				};
+				user =
+				{
+					name = "nixwiz";
+					email = "nixwiz@nixwiz.one";
 				};
 			};
 		};

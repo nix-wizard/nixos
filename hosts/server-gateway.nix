@@ -26,7 +26,7 @@ in
 			kernelModules =
 			[
 				"i915"
-				"r8169"
+				"e1000e"
 			];
 			luks =
 			{
@@ -70,7 +70,7 @@ in
 						{
 							matchConfig =
 							{
-								Name = "enp5s0";
+								Name = "eno1";
 							};
 							networkConfig =
 							{
@@ -90,7 +90,7 @@ in
 			"coretemp"
 			"nct6775"
 			"kvm_intel"
-			"r8169"
+			"e1000e"
 		];
 		kernel =
 		{
@@ -148,7 +148,7 @@ in
 		};
 		"/boot" =
 		{
-			device = "/dev/disk/by-uuid/0239-73C4";
+			device = "/dev/nvme0n1p1";
 			fsType = "vfat";
 			options =
 			[
@@ -167,7 +167,7 @@ in
 			enable = true;
 			interfaces =
 			{
-				"enp5s0" =
+				"eno1" =
 				{
 					allowedTCPPorts =
 					[
@@ -178,7 +178,7 @@ in
 					[
 					];
 				};
-				"enp2s0" =
+				"enp1s0" =
 				{
 					allowedTCPPorts =
 					[
@@ -193,10 +193,10 @@ in
 		nat =
 		{
 			enable = true;
-			externalInterface = "enp5s0";
+			externalInterface = "eno1";
 			internalInterfaces =
 			[
-				"enp2s0"
+				"enp1s0"
 			];
 		};
 	};
@@ -212,7 +212,7 @@ in
 				{
 					matchConfig =
 					{
-						Name = "enp5s0";
+						Name = "eno1";
 					};
 					networkConfig =
 					{
@@ -227,7 +227,7 @@ in
 				{
 					matchConfig =
 					{
-						Name = "enp2s0";
+						Name = "enp1s0";
 					};
 					networkConfig =
 					{
