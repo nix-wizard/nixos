@@ -65,6 +65,15 @@
 					)
 				];
 			};
+			nixlabs-vps = nixpkgs.lib.nixosSystem
+			{
+				system = "x86_64-linux";
+				modules =
+				[
+					./configuration.nix
+					./hosts/nixlabs-vps.nix
+				];
+			};
 		};
 	};
 }

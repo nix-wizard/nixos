@@ -137,10 +137,6 @@ in
 				"noatime"
 			];
 		};
-	};
-
-	fileSystems =
-	{
 		"/" =
 		{
 			device = "/dev/mapper/cryptroot";
