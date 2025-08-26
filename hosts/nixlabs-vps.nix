@@ -15,30 +15,23 @@ in
 		{
 			availableKernelModules =
 			[
+				"virtio_pci"
+				"virtio_blk"
+				"virtio_scsi"
+				"nvme"
+				"sd_mod"
+				"sr_mod"
+				"ahci"
 				"xhci_pci"
 				"ehci_pci"
-				"ahci"
-				"nvme"
 				"usbhid"
 				"usb_storage"
-				"sd_mod"
-				"virtio_pci"
-				"virtio_scsi"
-				"sr_mod"
-				"virtio_blk"
-				"virtio_net"
-				"virtio_mmio"
 				"9p"
 				"9pnet_virtio"
 			];
 			kernelModules =
 			[
-				"virtio_pci"
 				"virtio_net"
-				"virtio_balloon"
-				"virtio_console"
-				"virtio_rng"
-				"virtio_gpu"
 			];
 			luks =
 			{
@@ -52,15 +45,15 @@ in
 			};
 			network =
 			{
-				#ssh =
-				#{
-				#	enable = true;
-				#	hostKeys =
-				#	[
-				#		"/etc/secrets/initrd/ssh_host_rsa_key"
-				#		"/etc/secrets/initrd/ssh_host_ed25519_key"
-				#	];
-				#};
+				ssh =
+				{
+					enable = true;
+					hostKeys =
+					[
+						"/etc/secrets/initrd/ssh_host_rsa_key"
+						"/etc/secrets/initrd/ssh_host_ed25519_key"
+					];
+				};
 			};
 			systemd =
 			{
@@ -70,31 +63,7 @@ in
 					enable = true;
 					networks =
 					{
-						"50-wan" =
-						{
-							matchConfig =
-							{
-								Name = "enp3s0";
-							};
-							networkConfig =
-							{
-								DHCP = "no";
-							};
-							address =
-							[
-								"74.113.94.90/24"
-							];
-							routes =
-							[
-								{
-									Gateway = "74.113.94.1";
-								}
-							];
-							linkConfig =
-							{
-								RequiredForOnline = "no";
-							};
-						};
+						"50-wan" = config.systemd.network.networks."50-wan";
 					};
 				};
 			};
@@ -102,8 +71,6 @@ in
 		kernelModules =
 		[
 			"kvm_intel"
-			"virtio_pci"
-			"virtio_net"
 			"virtio_balloon"
 			"virtio_console"
 			"virtio_rng"
@@ -157,7 +124,7 @@ in
 					[
 					];
 				};
-			p3s0
+			};
 		};
 	};
 
@@ -186,7 +153,7 @@ in
 					[
 						{
 							Gateway = "74.113.97.1";
-						};
+						}
 					];
 					linkConfig =
 					{
@@ -247,7 +214,7 @@ in
 	[
 		{
 			device = "/dev/vda3";
-		};
+		}
 	];
 	
 	environment =
