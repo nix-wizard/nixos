@@ -5,9 +5,6 @@
 	modulesPath,
 	...
 }:
-let
-	main-desktop_pubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHm3/himFHzpu+B5N9uB7QEafkYrUmXfPatEQgKcSWJ2 main-desktop";
-in
 {
 	boot =
 	{
@@ -92,6 +89,19 @@ in
 			"kvm_intel"
 			"e1000e"
 		];
+		loader =
+		{
+			efi =
+			{
+				canTouchEfiVariables = true;
+			};
+			grub =
+			{
+				enable = true;
+				device = "nodev";
+				efiSupport = true;
+			};
+		};
 		kernel =
 		{
 			sysctl =
@@ -111,6 +121,13 @@ in
 				owner = "copyparty";
 				group = "copyparty";
 				mode = "0600";
+			};
+			server-gateway-wireguard-priv =
+			{
+				file = ../secrets/server-gateway-wireguard-priv.age;
+				owner = "root";
+				group = "copyparty";
+				"mode" = "0600";
 			};
 		};
 	};
@@ -247,26 +264,6 @@ in
 				"d /srv/share 0755 root root -"
 				"d /srv/server 0755 root root -"
 			];
-		};
-	};
-
-	users =
-	{
-		users =
-		{
-			"root" =
-			{
-				openssh =
-				{
-					authorizedKeys =
-					{
-						keys =
-						[
-							main-desktop_pubkey
-						];
-					};
-				};
-			};
 		};
 	};
 

@@ -5,23 +5,6 @@
 	...
 }:
 {
-	boot =
-	{
-		loader =
-		{
-			efi =
-			{
-				canTouchEfiVariables = true;
-			};
-			grub =
-			{
-				enable = true;
-				device = "nodev";
-				efiSupport = true;
-			};
-		};
-	};
-
 	imports =
 	[
 	];
@@ -55,6 +38,7 @@
 			btrfs-progs
 			pciutils
 			net-tools
+			wireguard-tools
 		];
 		variables =
 		{
@@ -82,6 +66,26 @@
 				{
 					name = "nixwiz";
 					email = "nixwiz@nixwiz.one";
+				};
+			};
+		};
+	};
+
+	users =
+	{
+		users =
+		{
+			"root" =
+			{
+				openssh =
+				{
+					authorizedKeys =
+					{
+						keys =
+						[
+							(builtins.readFile ./pubkeys/nixwiz.pub)
+						];
+					};
 				};
 			};
 		};

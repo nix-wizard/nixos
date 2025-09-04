@@ -5,9 +5,6 @@
 	modulesPath,
 	...
 }:
-let
-	main-desktop_pubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHm3/himFHzpu+B5N9uB7QEafkYrUmXfPatEQgKcSWJ2 main-desktop";
-in
 {
 	boot =
 	{
@@ -65,6 +62,19 @@ in
 					{
 						"50-wan" = config.systemd.network.networks."50-wan";
 					};
+				};
+			};
+			loader =
+			{
+				efi =
+				{
+					canTouchEfiVariables = true;
+				};
+				grub =
+				{
+					enable = true;
+					device = "nodev";
+					efiSupport = true;
 				};
 			};
 		};
@@ -158,26 +168,6 @@ in
 					linkConfig =
 					{
 						RequiredForOnline = "yes";
-					};
-				};
-			};
-		};
-	};
-
-	users =
-	{
-		users =
-		{
-			"root" =
-			{
-				openssh =
-				{
-					authorizedKeys =
-					{
-						keys =
-						[
-							main-desktop_pubkey
-						];
 					};
 				};
 			};
