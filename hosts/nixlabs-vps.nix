@@ -151,43 +151,6 @@
 				};
 			};
 		};
-		nat =
-		{
-			enable = true;
-			externalInterface = "enp3s0";
-			internalInterfaces =
-			[
-				"wg0"
-			];
-		};
-		wireguard =
-		{
-			interfaces =
-			{
-				wg0 =
-				{
-					ips =
-					[
-						"192.168.1.1/24"
-					];
-					listenPort = 51820;
-					postSetup = "${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
-					postShutdown = "${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
-					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
-					peers =
-					[
-						{
-							name = "nixwiz";
-							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
-							allowedIPs =
-							[
-								"192.168.1.2/32"
-							];
-						}
-					];
-				};
-			};
-		};
 	};
 
 	systemd =
@@ -221,6 +184,49 @@
 					{
 						RequiredForOnline = "yes";
 					};
+				};
+				wg0 =
+				{
+					matchConfig =
+					{
+						Name = "wg0";
+					};
+					address =
+					[
+						"192.168.1.1/24"
+					];
+					networkConfig =
+					{
+						IPMasquerade = "ipv4";
+						IPv4Forwarding = true;
+					};
+				};
+			};
+			netdevs =
+			{
+				"50-wg0" =
+				{
+					netdevConfig =
+					{
+						Kind = "wireguard";
+						Name = "wg0";
+						MTUBytes = "1300";
+					};
+					wireguardConfig =
+					{
+						PrivateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
+						ListenPort = 51820;
+					};
+					wireguardPeers =
+					[
+						{
+							PublicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							AllowedIPs =
+							[
+								"192.168.1.2"
+							];
+						}
+					];
 				};
 			};
 		};
