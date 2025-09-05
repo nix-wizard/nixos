@@ -39,6 +39,7 @@
 			pciutils
 			net-tools
 			wireguard-tools
+			dos2unix
 		];
 		variables =
 		{

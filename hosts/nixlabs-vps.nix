@@ -114,6 +114,20 @@
 		};
 	};
 
+	age =
+	{
+		secrets =
+		{
+			nixlabs-vps-wireguard-private =
+			{
+				file = ../secrets/nixlabs-vps-wireguard-private.age;
+				owner = "root";
+				group = "root";
+				mode = "0600";
+			};
+		};
+	};
+
 	networking =
 	{
 		hostName = "nixlabs-vps";
@@ -132,7 +146,34 @@
 					];
 					allowedUDPPorts =
 					[
+						51820
 					];
+				};
+			};
+		};
+		nat =
+		{
+			enable = true;
+			externalInterface = "enp3s0";
+			internalInterfaces =
+			[
+				"wg0"
+			];
+		};
+		wireguard =
+		{
+			interfaces =
+			{
+				wg0 =
+				{
+					ips =
+					[
+						"192.168.1.1/24"
+					];
+					listenPort = 51820;
+					postSetup = "${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
+					postShutdown = "${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
+					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
 				};
 			};
 		};

@@ -6,11 +6,11 @@
 			(builtins.readFile ../pubkeys/server-gateway.pub)
 		];
 	};
-	"server-gateway-wireguard-priv.age" =
+	"nixlabs-vps-wireguard-private.age" =
 	{
 		publicKeys =
 		[
-			(builtins.readFile ../pubkeys/server-gateway.pub)
+			(builtins.readFile ../pubkeys/nixlabs-vps.pub)
 		];
 	};
 }
