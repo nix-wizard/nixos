@@ -189,6 +189,7 @@
 					];
 					allowedUDPPorts =
 					[
+						51820
 					];
 				};
 				"enp1s0" =
@@ -253,6 +254,54 @@
 					address =
 					[
 						"10.1.0.1"
+					];
+				};
+				wg0 =
+				{
+					matchConfig =
+					{
+						Name = "wg0";
+					};
+					address =
+					[
+						"192.168.1.2/32"
+					];
+					DHCP = "no";
+					gateway =
+					[
+						"192.168.1.1"
+					];
+					networkConfig =
+					{
+						IPv6AcceptRA = false;
+					};
+				};
+			};
+			netdevs =
+			{
+				"50-wg0" =
+				{
+					netdevConfig =
+					{
+						Kind = "wireguard";
+						Name = "wg0";
+						MTUBytes = "1300";
+					};
+					wireguardConfig =
+					{
+						PrivateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+						ListenPort = 51820;
+					};
+					wireguardPeers =
+					[
+						{
+							PublicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
+							AllowedIPs =
+							[
+								"192.168.1.1"
+							];
+							Endpoint = "74.113.97.90:51820";
+						}
 					];
 				};
 			};

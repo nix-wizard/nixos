@@ -199,6 +199,8 @@
 					{
 						IPMasquerade = "ipv4";
 						IPv4Forwarding = true;
+						IPv6AcceptRA = false;
+						IPv6Forwarding = false;
 					};
 				};
 			};
