@@ -177,7 +177,7 @@
 					peers =
 					[
 						{
-							name = "nixwiz"
+							name = "nixwiz";
 							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
 							allowedIPs =
 							[
