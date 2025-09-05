@@ -174,6 +174,17 @@
 					postSetup = "${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
 					postShutdown = "${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE";
 					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
+					peers =
+					[
+						{
+							name = "nixwiz"
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							allowedIPs =
+							[
+								"192.168.1.2/32"
+							];
+						}
+					];
 				};
 			};
 		};

@@ -122,11 +122,11 @@
 				group = "copyparty";
 				mode = "0600";
 			};
-			server-gateway-wireguard-priv =
+			server-gateway-wireguard-private =
 			{
-				file = ../secrets/server-gateway-wireguard-priv.age;
+				file = ../secrets/server-gateway-wireguard-private.age;
 				owner = "root";
-				group = "copyparty";
+				group = "root";
 				"mode" = "0600";
 			};
 		};
