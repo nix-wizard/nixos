@@ -194,48 +194,6 @@
 					];
 				};
 			};
-			wg0 =
-			{
-				ipv4 =
-				{
-					routes =
-					[
-						{
-							address = "0.0.0.0";
-							prefixLength = 0;
-							via = "192.168.1.1";
-						}
-					];
-				};
-			};
-		};
-		wireguard =
-		{
-			interfaces =
-			{
-				wg0 =
-				{
-					ips =
-					[
-						"192.168.1.2/24"
-					];
-					listenPort = 51820;
-					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-					peers =
-					[
-						{
-							name = "nixlabs-vps";
-							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
-							allowedIPs =
-							[
-								"0.0.0.0"
-							];
-							endpoint = "74.113.97.90:51820";
-							persistentKeepalive = 25;
-						}
-					];
-				};
-			};
 		};
 		firewall =
 		{
