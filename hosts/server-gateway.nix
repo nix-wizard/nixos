@@ -180,6 +180,17 @@
 			eno1 =
 			{
 				useDHCP = true;
+				ipv4 =
+				{
+					routes =
+					[
+						{
+							address = "74.113.97.90";
+							prefixLength = 32;
+							via = "192.168.0.1";
+						}
+					];
+				};
 			};
 			enp1s0 =
 			{
@@ -194,29 +205,45 @@
 					];
 				};
 			};
+			wg0 =
+			{
+				ipv4 =
+				{
+					addresses =
+					[
+						{
+							address = "192.168.1.2";
+							prefixLength = 24;
+						}
+					];
+				};
+			};
 		};
 		wireguard =
 		{
-			wg0 =
+			interfaces =
 			{
-				ips =
-				[
-					"192.168.1.2/24"
-				];
-				listenPort = 51820;
-				privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-				peers =
-				[
-					{
-						publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
-						allowedIPs =
-						[
-							"0.0.0.0/0"
-						];
-						endpoint = "74.113.97.90:51820";
-						persistentKeepalive = 25;
-					}
-				];
+				wg0 =
+				{
+					#ips =
+					#[
+					#	"192.168.1.2/24"
+					#];
+					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+					peers =
+					[
+						{
+							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
+							allowedIPs =
+							[
+								#"192.168.1.0/24"
+								"0.0.0.0/0"
+							];
+							endpoint = "74.113.97.90:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
 			};
 		};
 		firewall =
