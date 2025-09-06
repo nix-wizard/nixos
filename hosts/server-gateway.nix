@@ -185,7 +185,7 @@
 					routes =
 					[
 						{
-							address = "74.113.97.90";
+							address = "74.113.97.95";
 							prefixLength = 32;
 							via = "192.168.0.1";
 						}
@@ -225,10 +225,6 @@
 			{
 				wg0 =
 				{
-					#ips =
-					#[
-					#	"192.168.1.2/24"
-					#];
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
 					peers =
 					[
@@ -236,10 +232,9 @@
 							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
 							allowedIPs =
 							[
-								#"192.168.1.0/24"
 								"0.0.0.0/0"
 							];
-							endpoint = "74.113.97.90:51820";
+							endpoint = "74.113.97.95:51820";
 							persistentKeepalive = 25;
 						}
 					];
@@ -267,6 +262,17 @@
 				{
 					allowedTCPPorts =
 					[
+						2222
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
+				"wg0" =
+				{
+					allowedTCPPorts =
+					[
+						22
 						2222
 					];
 					allowedUDPPorts =
