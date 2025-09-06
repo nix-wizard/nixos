@@ -177,6 +177,32 @@
 			address = "74.113.97.1";
 			interface = "enp3s0";
 		};
+		wireguard =
+		{
+			interfaces =
+			{
+				wg0 =
+				{
+					ips =
+					[
+						"192.168.1.1/24"
+					];
+					listenPort = 51820;
+					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
+					peers =
+					[
+						{
+							name = "server-gateway";
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							allowedIPs =
+							[
+								"192.168.1.2/32"
+							];
+						}
+					];
+				};
+			};
+		};
 		firewall =
 		{
 			enable = true;
@@ -196,6 +222,15 @@
 				};
 			};
 			allowPing = true;
+		};
+		nat =
+		{
+			enable = true;
+			externalInterface = "enp3s0";
+			internalInterfaces =
+			[
+				"wg0"
+			];
 		};
 
 	};
