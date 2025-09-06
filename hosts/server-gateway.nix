@@ -175,6 +175,54 @@
 	{
 		hostName = "server-gateway";
 		useDHCP = false;
+		interfaces =
+		{
+			eno1 =
+			{
+				useDHCP = true;
+			};
+			enp1s0 =
+			{
+				ipv4 =
+				{
+					addresses =
+					[
+						{
+							address = "10.1.0.1";
+							previxLength = 24;
+						};
+					];
+				};
+			};
+		};
+		wireguard =
+		{
+			interfaces =
+			{
+				wg0 =
+				{
+					ips =
+					[
+						"192.168.1.2/24"
+					];
+					listenPort = 51820;
+					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+					peers =
+					[
+						{
+							name = "nixlabs-vps";
+							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
+							allowedIPs =
+							[
+								"0.0.0.0/0"
+							];
+							endpoint = "74.113.97.90:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
+			};
+		};
 		firewall =
 		{
 			enable = true;
@@ -203,6 +251,7 @@
 					];
 				};
 			};
+			allowPing = true;
 		};
 		nat =
 		{
@@ -217,95 +266,6 @@
 
 	systemd =
 	{
-		network =
-		{
-			enable = true;
-			networks =
-			{
-				"50-wan"=
-				{
-					matchConfig =
-					{
-						Name = "eno1";
-					};
-					networkConfig =
-					{
-						DHCP = "ipv4";
-					};
-					linkConfig =
-					{
-						RequiredForOnline = "yes";
-					};
-				};
-				"50-lan" =
-				{
-					matchConfig =
-					{
-						Name = "enp1s0";
-					};
-					networkConfig =
-					{
-						DHCP = "no";
-					};
-					linkConfig =
-					{
-						RequiredForOnline = "no";
-					};
-					address =
-					[
-						"10.1.0.1"
-					];
-				};
-				wg0 =
-				{
-					matchConfig =
-					{
-						Name = "wg0";
-					};
-					address =
-					[
-						"192.168.1.2/32"
-					];
-					DHCP = "no";
-					gateway =
-					[
-						"192.168.1.1"
-					];
-					networkConfig =
-					{
-						IPv6AcceptRA = false;
-					};
-				};
-			};
-			netdevs =
-			{
-				"50-wg0" =
-				{
-					netdevConfig =
-					{
-						Kind = "wireguard";
-						Name = "wg0";
-						MTUBytes = "1300";
-					};
-					wireguardConfig =
-					{
-						PrivateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-						ListenPort = 51820;
-					};
-					wireguardPeers =
-					[
-						{
-							PublicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
-							AllowedIPs =
-							[
-								"192.168.1.1"
-							];
-							Endpoint = "74.113.97.90:51820";
-						}
-					];
-				};
-			};
-		};
 		tmpfiles =
 		{
 			rules =

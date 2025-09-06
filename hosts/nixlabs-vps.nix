@@ -60,7 +60,31 @@
 					enable = true;
 					networks =
 					{
-						"50-wan" = config.systemd.network.networks."50-wan";
+						"50-wan" =
+						{
+							matchConfig =
+							{
+								Name = "enp3s0";
+							};
+							networkConfig =
+							{
+								DHCP = "no";
+							};
+							address =
+							[
+								"74.113.97.90/24"
+							];
+							routes =
+							[
+								{
+									Gateway = "74.113.97.1";
+								}
+							];
+							linkConfig =
+							{
+								RequiredForOnline = "yes";
+							};
+						};
 					};
 				};
 			};
@@ -132,6 +156,62 @@
 	{
 		hostName = "nixlabs-vps";
 		useDHCP = false;
+		interfaces =
+		{
+			enp3s0 =
+			{
+				ipv4 =
+				{
+					addresses =
+					[
+						{
+							address = "74.113.97.90";
+							prefixLength = 24;
+						}
+					];
+				};
+			};
+		};
+		defaultGateway =
+		{
+			address = "74.113.97.1";
+			interface = "enp3s0";
+		};
+		wireguard =
+		{
+			interfaces =
+			{
+				wg0 =
+				{
+					ips =
+					[
+						"192.168.1.1/24"
+					];
+					listenPort = 51820;
+					postSetup =
+					''
+						${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE
+					'';
+					postShutdown =
+					''
+						${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o enp3s0 -j MASQUERADE
+					'';
+
+					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
+					peers =
+					[
+						{
+							name = "server-gateway";
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							allowedIPs =
+							[
+								"192.168.1.2/32"
+							];
+						}
+					];
+				};
+			};
+		};
 		firewall =
 		{
 			enable = true;
@@ -151,87 +231,16 @@
 				};
 			};
 		};
-	};
-
-	systemd =
-	{
-		network =
+		nat =
 		{
 			enable = true;
-			networks =
-			{
-				"50-wan"=
-				{
-					matchConfig =
-					{
-						Name = "enp3s0";
-					};
-					networkConfig =
-					{
-						DHCP = "no";
-					};
-					address =
-					[
-						"74.113.97.90/24"
-					];
-					routes =
-					[
-						{
-							Gateway = "74.113.97.1";
-						}
-					];
-					linkConfig =
-					{
-						RequiredForOnline = "yes";
-					};
-				};
-				wg0 =
-				{
-					matchConfig =
-					{
-						Name = "wg0";
-					};
-					address =
-					[
-						"192.168.1.1/24"
-					];
-					networkConfig =
-					{
-						IPMasquerade = "ipv4";
-						IPv4Forwarding = true;
-						IPv6AcceptRA = false;
-						IPv6Forwarding = false;
-					};
-				};
-			};
-			netdevs =
-			{
-				"50-wg0" =
-				{
-					netdevConfig =
-					{
-						Kind = "wireguard";
-						Name = "wg0";
-						MTUBytes = "1300";
-					};
-					wireguardConfig =
-					{
-						PrivateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
-						ListenPort = 51820;
-					};
-					wireguardPeers =
-					[
-						{
-							PublicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
-							AllowedIPs =
-							[
-								"192.168.1.2"
-							];
-						}
-					];
-				};
-			};
+			externalInterface = "enp3s0";
+			internalInterfaces =
+			[
+				"wg0"
+			];
 		};
+
 	};
 
 	services =

@@ -94,7 +94,6 @@
 
 	networking =
 	{
-		useNetworkd = true;
 		hosts =
 		{
 			"127.0.1.1" =
