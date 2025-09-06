@@ -250,12 +250,10 @@
 				{
 					allowedTCPPorts =
 					[
-						22
 						2222
 					];
 					allowedUDPPorts =
 					[
-						51820
 					];
 				};
 				"enp1s0" =
@@ -274,6 +272,8 @@
 					[
 						22
 						2222
+						80
+						443
 					];
 					allowedUDPPorts =
 					[
@@ -369,6 +369,32 @@
 				'';
 			};
 		};
+		nginx =
+		{
+			enable = true;
+			recommendedProxySettings = true;
+			virtualHosts =
+			{
+				"_default" = #TODO: zip bomb?
+				{
+					default = true;
+					locations =
+					{
+						"/" =
+						{
+							return = "404";
+						};
+					};
+					listen =
+					[
+						{
+							addr = "0.0.0.0";
+							port = 80;
+						}
+					];
+				};
+			};
+		};
 	};
 	
 	hardware =
@@ -390,6 +416,18 @@
 			};
 		};
 		enableRedistributableFirmware = true;
+	};
+
+	security =
+	{
+		acme =
+		{
+			acceptTerms = true;
+			defaults =
+			{
+				email = "nixwiz@nixwiz.one";
+			};
+		};
 	};
 
 	environment =

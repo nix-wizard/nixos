@@ -255,6 +255,8 @@
 						type nat hook prerouting priority dstnat;
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 192.168.1.2:22
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 192.168.1.2:2222
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 192.168.1.2:80
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 192.168.1.2:443
 					}
 
 					chain postrouting {
