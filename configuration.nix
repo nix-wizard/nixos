@@ -109,6 +109,10 @@
 				"server1.lan"
 			];
 		};
+		nameservers =
+		[
+			"9.9.9.9"
+		];
 	};
 
 	nix =
