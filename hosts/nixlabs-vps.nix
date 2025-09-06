@@ -230,6 +230,7 @@
 					];
 				};
 			};
+			allowPing = true;
 		};
 		nat =
 		{
