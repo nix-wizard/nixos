@@ -189,8 +189,8 @@
 					[
 						{
 							address = "10.1.0.1";
-							previxLength = 24;
-						};
+							prefixLength = 24;
+						}
 					];
 				};
 			};
