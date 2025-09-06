@@ -72,7 +72,7 @@
 							};
 							address =
 							[
-								"74.113.97.90/24"
+								"74.113.97.95/24"
 							];
 							routes =
 							[
@@ -168,6 +168,10 @@
 							address = "74.113.97.90";
 							prefixLength = 24;
 						}
+						{
+							address = "74.113.97.95";
+							prefixLength = 24;
+						}
 					];
 				};
 			};
@@ -220,6 +224,15 @@
 						51820
 					];
 				};
+				"wg0" =
+				{
+					allowedTCPPorts =
+					[
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
 			};
 			allowPing = true;
 		};
@@ -231,6 +244,25 @@
 			[
 				"wg0"
 			];
+		};
+		nftables =
+		{
+			enable = true;
+			ruleset =
+			''
+				table ip nat {
+					chain prerouting {
+						type nat hook prerouting priority dstnat;
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 192.168.1.2:22
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 192.168.1.2:2222
+					}
+
+					chain postrouting {
+						type nat hook postrouting priority srcnat;
+						oifname "wg0" masquerade
+					}
+				}
+			'';
 		};
 
 	};
@@ -249,15 +281,10 @@
 			listenAddresses =
 			[
 				{
-					addr = "0.0.0.0";
+					addr = "74.113.97.95";
 					port = 2222;
 				}
 			];
-		};
-		endlessh =
-		{
-			enable = true;
-			port = 22;
 		};
 	};
 
