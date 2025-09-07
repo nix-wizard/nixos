@@ -189,7 +189,7 @@
 				{
 					ips =
 					[
-						"192.168.1.1/24"
+						"172.16.0.1/24"
 					];
 					listenPort = 51820;
 					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
@@ -200,7 +200,39 @@
 							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
 							allowedIPs =
 							[
-								"192.168.1.2/32"
+								"172.16.0.2/32"
+							];
+						}
+						{
+							name = "nixwiz";
+							publicKey = (builtins.readFile ../pubkeys/nixwiz-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.3/32"
+							];
+						}
+						{
+							name = "lexi";
+							publicKey = (builtins.readFile ../pubkeys/lexi-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.4/32"
+							];
+						}
+						{
+							name = "otherlexi";
+							publicKey = (builtins.readFile ../pubkeys/otherlexi-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.69/32"
+							];
+						}
+						{
+							name = "lolbird";
+							publicKey = (builtins.readFile ../pubkeys/lolbird-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.42/32"
 							];
 						}
 					];
@@ -253,15 +285,15 @@
 				table ip nat {
 					chain prerouting {
 						type nat hook prerouting priority dstnat;
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 192.168.1.2:22
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 192.168.1.2:2222
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 192.168.1.2:80
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 192.168.1.2:443
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 172.16.0.2:22
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 172.16.0.2:2222
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 172.16.0.2:80
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 172.16.0.2:443
 					}
 
 					chain postrouting {
 						type nat hook postrouting priority srcnat;
-						ip daddr 192.168.1.0/24 return
+						ip daddr 172.16.0.0/24 return
 						oifname "wg0" masquerade
 					}
 				}
