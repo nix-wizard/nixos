@@ -212,7 +212,7 @@
 					addresses =
 					[
 						{
-							address = "192.168.1.2";
+							address = "172.16.0.2";
 							prefixLength = 24;
 						}
 					];
@@ -299,8 +299,8 @@
 		{
 			rules =
 			[
-				"d /srv/share 0755 root root -"
-				"d /srv/server 0755 root root -"
+				"d /srv/share 2770 root copyparty -"
+				"d /srv/server 2770 root root -"
 			];
 		};
 	};
@@ -350,7 +350,7 @@
 					path = "/srv/share";
 					access =
 					{
-						rw =
+						A =
 						[
 							"nixwiz"
 						];
@@ -373,9 +373,10 @@
 		{
 			enable = true;
 			recommendedProxySettings = true;
+			recommendedTlsSettings = true;
 			virtualHosts =
 			{
-				"_default" = #TODO: zip bomb?
+				"_default" =
 				{
 					default = true;
 					locations =
@@ -385,13 +386,6 @@
 							return = "404";
 						};
 					};
-					listen =
-					[
-						{
-							addr = "0.0.0.0";
-							port = 80;
-						}
-					];
 				};
 				"copyparty.nixwiz.one" =
 				{
@@ -404,6 +398,10 @@
 							proxyPass = "http://localhost:3923";
 						};
 					};
+					extraConfig =
+					''
+						client_max_body_size 32G;
+					'';
 				};
 			};
 		};
