@@ -11,10 +11,6 @@
 		{
 			url = "github:numtide/flake-utils";
 		};
-		copyparty =
-		{
-			url = "github:9001/copyparty";
-		};
 		agenix =
 		{
 			url = "github:ryantm/agenix";
@@ -26,7 +22,6 @@
 		self,
 		nixpkgs,
 		flake-utils,
-		copyparty,
 		agenix
 	}:
 	{
@@ -39,7 +34,6 @@
 				[
 					./configuration.nix
 					./hosts/server-gateway.nix
-					copyparty.nixosModules.default
 					agenix.nixosModules.default
 					(
 						{
@@ -47,13 +41,6 @@
 							...
 						}:
 						{
-							nixpkgs =
-							{
-								overlays =
-								[
-									copyparty.overlays.default
-								];
-							};
 							environment =
 							{
 								systemPackages =

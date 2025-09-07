@@ -115,13 +115,6 @@
 	{
 		secrets =
 		{
-			copyparty-nixwiz-password =
-			{
-				file = ../secrets/copyparty-nixwiz-password.age;
-				owner = "copyparty";
-				group = "copyparty";
-				mode = "0600";
-			};
 			server-gateway-wireguard-private =
 			{
 				file = ../secrets/server-gateway-wireguard-private.age;
@@ -274,9 +267,21 @@
 						2222
 						80
 						443
+						111
+						2049
+						4000
+						4001
+						4002
+						20048
 					];
 					allowedUDPPorts =
 					[
+						111
+						2049
+						4000
+						4001
+						4002
+						20048
 					];
 				};
 			};
@@ -299,7 +304,7 @@
 		{
 			rules =
 			[
-				"d /srv/share 2770 root copyparty -"
+				"d /srv/share 2770 root root -"
 				"d /srv/server 2770 root root -"
 			];
 		};
@@ -329,43 +334,18 @@
 			enable = true;
 			port = 22;
 		};
-		copyparty =
-		{
-			enable = true;
-			settings =
-			{
-				i = "0.0.0.0";
-			};
-			accounts =
-			{
-				nixwiz =
-				{
-					passwordFile = config.age.secrets.copyparty-nixwiz-password.path;
-				};
-			};
-			volumes =
-			{
-				"/" =
-				{
-					path = "/srv/share";
-					access =
-					{
-						A =
-						[
-							"nixwiz"
-						];
-					};
-				};
-			};
-		};
 		nfs =
 		{
 			server =
 			{
 				enable = true;
+				lockdPort = 4001;
+				mountdPort = 4002;
+				statdPort = 4000;
 				exports =
 				''
-					/srv/server 127.0.0.1(rw,sync,no_root_squash,no_subtree_check)
+					/srv 172.16.0.3(rw,fsid=0,no_subtree_check)
+					/srv/share 172.16.0.3(rw,nohide,insecure,no_subtree_check)
 				'';
 			};
 		};
@@ -386,22 +366,6 @@
 							return = "404";
 						};
 					};
-				};
-				"copyparty.nixwiz.one" =
-				{
-					enableACME = true;
-					forceSSL = true;
-					locations =
-					{
-						"/" =
-						{
-							proxyPass = "http://localhost:3923";
-						};
-					};
-					extraConfig =
-					''
-						client_max_body_size 32G;
-					'';
 				};
 			};
 		};
@@ -444,7 +408,6 @@
 	{
 		systemPackages = with pkgs;
 		[
-			copyparty
 		];
 	};
 
