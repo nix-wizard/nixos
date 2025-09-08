@@ -45,11 +45,13 @@
 				ssh =
 				{
 					enable = true;
+					port = 2222;
 					hostKeys =
 					[
 						"/etc/secrets/initrd/ssh_host_rsa_key"
 						"/etc/secrets/initrd/ssh_host_ed25519_key"
 					];
+
 				};
 			};
 			systemd =
@@ -208,7 +210,7 @@
 							publicKey = (builtins.readFile ../pubkeys/nixwiz-wireguard-public);
 							allowedIPs =
 							[
-								"172.16.0.3/32"
+								"172.16.0.4/32"
 							];
 						}
 						{
@@ -216,7 +218,7 @@
 							publicKey = (builtins.readFile ../pubkeys/lexi-wireguard-public);
 							allowedIPs =
 							[
-								"172.16.0.4/32"
+								"172.16.0.5/32"
 							];
 						}
 						{
@@ -286,7 +288,7 @@
 					chain prerouting {
 						type nat hook prerouting priority dstnat;
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 172.16.0.2:22
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 172.16.0.2:2222
+						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 172.16.0.3:2222
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 172.16.0.2:80
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 172.16.0.2:443
 					}
@@ -317,7 +319,7 @@
 			[
 				{
 					addr = "74.113.97.95";
-					port = 2222;
+					port = 22;
 				}
 			];
 		};
