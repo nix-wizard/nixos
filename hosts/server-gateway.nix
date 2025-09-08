@@ -19,11 +19,13 @@
 				"usbhid"
 				"usb_storage"
 				"sd_mod"
+				"wireguard"
 			];
 			kernelModules =
 			[
 				"i915"
 				"e1000e"
+				"wireguard"
 			];
 			luks =
 			{
@@ -48,6 +50,7 @@
 				ssh =
 				{
 					enable = true;
+					port = 2222;
 					hostKeys =
 					[
 						"/etc/secrets/initrd/ssh_host_rsa_key"
@@ -80,14 +83,85 @@
 						};
 					};
 				};
+				services =
+				{
+					wireguard-setup =
+					{
+						wantedBy =
+						[
+							"initrd.target"
+						];
+						after =
+						[
+							"network-online.target"
+						];
+						wants =
+						[
+							"network-online.target"
+						];
+						path = with pkgs;
+						[
+							wireguard-tools
+							iproute2
+						];
+						serviceConfig =
+						{
+							Type = "oneshot";
+							ExecStart = pkgs.writeShellScript "setup-wireguard"
+							''
+								set -eux
+
+								echo "[initrd] Waiting for network interface 'eno1' to be ready..."
+
+								while ! ip route | grep -q '^default'; do
+									sleep 1
+								done
+
+								echo "[initrd] Setting up route to WireGuard endpoint..."
+
+								ip route add 74.113.97.96/32 via 192.168.0.1 dev eno1
+
+								echo "[initrd] Setting up WireGuard interface..."
+
+								ip link add dev wg0 type wireguard
+								ip addr add 172.16.0.3/24 dev wg0
+
+								wg set wg0 \
+									private-key /etc/wireguard/server-gateway-initrd-wireguard-private \
+									peer $(cat /etc/wireguard/nixlabs-vps-wireguard-public) \
+									endpoint 74.113.97.95 \
+									allowed-ips 0.0.0.0/0 \
+									persistent-keepalive 25
+								ip link set wg0 up
+
+								echo "[initrd] WireGuard setup complete."
+							'';
+						};
+					};
+				};
+				packages = with pkgs;
+				[
+					wireguard-tools
+					iproute2
+				];
+			};
+			extraFiles =
+			{
+				"/etc/wireguard/nixlabs-vps-wireguard-public" =
+				{
+					source = ../pubkeys/nixlabs-vps-wireguard-public;
+				};
+			};
+			secrets =
+			{
+				"/etc/wireguard/server-gateway-initrd-wireguard-private" = config.age.secrets.server-gateway-initrd-wireguard-private.path;
 			};
 		};
 		kernelModules =
 		[
-			"coretemp"
-			"nct6775"
 			"kvm_intel"
 			"e1000e"
+			"wireguard"
 		];
 		loader =
 		{
@@ -120,7 +194,14 @@
 				file = ../secrets/server-gateway-wireguard-private.age;
 				owner = "root";
 				group = "root";
-				"mode" = "0600";
+				mode = "0600";
+			};
+			server-gateway-initrd-wireguard-private =
+			{
+				file = ../secrets/server-gateway-initrd-wireguard-private.age;
+				owner = "root";
+				group = "root";
+				mode = "0600";
 			};
 		};
 	};
@@ -232,6 +313,26 @@
 						}
 					];
 				};
+				wg1 =
+				{
+					ips =
+					[
+						"172.16.1.1/24"
+					];
+					listenPort = 51820;
+					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+					#peers =
+					#[
+						#{
+							#name = "server1";
+							#publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
+							#allowedIPs =
+							#[
+							#	"172.16.1.2/32"
+							#];
+						#}
+					#];
+				};
 			};
 		};
 		firewall =
@@ -243,7 +344,7 @@
 				{
 					allowedTCPPorts =
 					[
-						2222
+						22
 					];
 					allowedUDPPorts =
 					[
@@ -253,10 +354,10 @@
 				{
 					allowedTCPPorts =
 					[
-						2222
 					];
 					allowedUDPPorts =
 					[
+						51820
 					];
 				};
 				"wg0" =
@@ -264,28 +365,21 @@
 					allowedTCPPorts =
 					[
 						22
-						2222
 						80
 						443
-						111
 						2049
-						4000
-						4001
-						4002
-						20048
 					];
 					allowedUDPPorts =
 					[
-						111
 						2049
-						4000
-						4001
-						4002
-						20048
 					];
 				};
 			};
 			allowPing = true;
+			#extraCommands =
+			#''
+			#	iptables -t nat -A POSTROUTING -o wg0 -s 10.1.0.0/24 -j MASQUERADE
+			#'';
 		};
 		nat =
 		{
@@ -293,7 +387,7 @@
 			externalInterface = "eno1";
 			internalInterfaces =
 			[
-				"enp1s0"
+				"wg0"
 			];
 		};
 	};
@@ -304,8 +398,8 @@
 		{
 			rules =
 			[
-				"d /srv/share 2770 root root -"
-				"d /srv/server 2770 root root -"
+				"d /srv/share 0777 root root -"
+				"d /srv/server 0777 root root -"
 			];
 		};
 	};
@@ -325,27 +419,19 @@
 			[
 				{
 					addr = "0.0.0.0";
-					port = 2222;
+					port = 22;
 				}
 			];
-		};
-		endlessh =
-		{
-			enable = true;
-			port = 22;
 		};
 		nfs =
 		{
 			server =
 			{
 				enable = true;
-				lockdPort = 4001;
-				mountdPort = 4002;
-				statdPort = 4000;
 				exports =
 				''
-					/srv 172.16.0.3(rw,fsid=0,no_subtree_check)
-					/srv/share 172.16.0.3(rw,nohide,insecure,no_subtree_check)
+					/srv/share 172.16.0.4(rw,sync,no_subtree_check,no_root_squash) 172.16.1.2(rw,sync,no_subtree_check,no_root_squash)
+					/srv/server 172.16.1.2(rw,sync,no_subtree_check,no_root_squash)
 				'';
 			};
 		};

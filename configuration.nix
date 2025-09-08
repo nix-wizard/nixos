@@ -112,7 +112,23 @@
 		nameservers =
 		[
 			"9.9.9.9"
+			"1.1.1.1"
 		];
+	};
+
+	system =
+	{
+		autoUpgrade =
+		{
+			enable = true;
+			flake = "/etc/nixos";
+			flags =
+			[
+				"-L"
+			];
+			dates = "02:00";
+			randomizedDelaySec = "45min";
+		};
 	};
 
 	nix =
