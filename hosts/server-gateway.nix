@@ -19,7 +19,6 @@
 				"usbhid"
 				"usb_storage"
 				"sd_mod"
-				"wireguard"
 			];
 			kernelModules =
 			[
@@ -87,70 +86,49 @@
 				{
 					wireguard-setup =
 					{
+						description = "Set up WireGuard interface";
 						wantedBy =
 						[
 							"initrd.target"
 						];
+						before =
+						[
+							"cryptsetup.target"
+							"systemd-cryptsetup@cryptserver.service"
+						];
 						after =
 						[
-							"network-online.target"
-						];
-						wants =
-						[
-							"network-online.target"
+							"systemd-networkd.service"
 						];
 						path = with pkgs;
 						[
 							wireguard-tools
 							iproute2
 						];
+						unitConfig =
+						{
+							DefaultDependencies = "no";
+						};
 						serviceConfig =
 						{
 							Type = "oneshot";
-							ExecStart = pkgs.writeShellScript "setup-wireguard"
-							''
-								set -eux
-
-								echo "[initrd] Waiting for network interface 'eno1' to be ready..."
-
-								while ! ip route | grep -q '^default'; do
-									sleep 1
-								done
-
-								echo "[initrd] Setting up route to WireGuard endpoint..."
-
-								ip route add 74.113.97.96/32 via 192.168.0.1 dev eno1
-
-								echo "[initrd] Setting up WireGuard interface..."
-
-								ip link add dev wg0 type wireguard
-								ip addr add 172.16.0.3/24 dev wg0
-
-								wg set wg0 \
-									private-key /etc/wireguard/server-gateway-initrd-wireguard-private \
-									peer $(cat /etc/wireguard/nixlabs-vps-wireguard-public) \
-									endpoint 74.113.97.95 \
-									allowed-ips 0.0.0.0/0 \
-									persistent-keepalive 25
-								ip link set wg0 up
-
-								echo "[initrd] WireGuard setup complete."
-							'';
 						};
+						script =
+						''
+							ip link add dev wg1 type wireguard
+
+							wg set wg1 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public)} endpoint 74.113.97.95:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
+
+							ip addr add 172.16.0.3/24 dev wg1
+							ip link set wg1 up
+						'';
 					};
 				};
-				packages = with pkgs;
+				initrdBin = with pkgs;
 				[
 					wireguard-tools
 					iproute2
 				];
-			};
-			extraFiles =
-			{
-				"/etc/wireguard/nixlabs-vps-wireguard-public" =
-				{
-					source = ../pubkeys/nixlabs-vps-wireguard-public;
-				};
 			};
 			secrets =
 			{
@@ -203,6 +181,7 @@
 				group = "root";
 				mode = "0600";
 			};
+
 		};
 	};
 
@@ -313,26 +292,26 @@
 						}
 					];
 				};
-				wg1 =
-				{
-					ips =
-					[
-						"172.16.1.1/24"
-					];
-					listenPort = 51820;
-					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-					#peers =
-					#[
-						#{
-							#name = "server1";
-							#publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
-							#allowedIPs =
-							#[
-							#	"172.16.1.2/32"
-							#];
-						#}
-					#];
-				};
+			#	wg2 =
+			#	{
+			#		ips =
+			#		[
+			#			"172.16.1.1/24"
+			#		];
+			#		listenPort = 51820;
+			#		privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+			#		peers =
+			#		[
+			#			{
+			#				name = "server1";
+			#				publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
+			#				allowedIPs =
+			#				[
+			#					"172.16.1.2/32"
+			#				];
+			#			}
+			#		];
+			#	};
 			};
 		};
 		firewall =
@@ -401,6 +380,26 @@
 				"d /srv/share 0777 root root -"
 				"d /srv/server 0777 root root -"
 			];
+		};
+		services =
+		{
+			cleanup-initrd-wireguard =
+			{
+				description = "Tear down initrd WireGuard interface";
+				wantedBy =
+				[
+					"network-online.target"
+				];
+				after =
+				[
+					"network-online.target"
+				];
+				serviceConfig =
+				{
+					Type = "oneshot";
+					ExecStart = "${pkgs.iproute2}/bin/ip link delete wg1";
+				};
+			};
 		};
 	};
 
