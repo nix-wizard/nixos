@@ -94,21 +94,6 @@
 
 	networking =
 	{
-		hosts =
-		{
-			"127.0.1.1" =
-			[
-				"${config.networking.hostName}.lan"
-			];
-			"10.1.0.1" =
-			[
-				"server-gateway.lan"
-			];
-			"10.1.0.2" =
-			[
-				"server1.lan"
-			];
-		};
 		nameservers =
 		[
 			"9.9.9.9"
