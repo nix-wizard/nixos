@@ -115,12 +115,32 @@
 						};
 						script =
 						''
-							ip link add dev wg1 type wireguard
+							ip link add dev wg0 type wireguard
 
-							wg set wg1 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public)} endpoint 74.113.97.95:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
+							wg set wg0 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public)} endpoint 74.113.97.90:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
 
-							ip addr add 172.16.0.3/24 dev wg1
-							ip link set wg1 up
+							ip addr add 172.16.0.3/24 dev wg0
+							ip link set wg0 up
+						'';
+					};
+					wireguard-cleanup =
+					{
+						description = "Tear down the WireGuard interface post-cryptsetup";
+						wantedBy =
+						[
+							"initrd.target"
+						];
+						after =
+						[
+							"cryptsetup.target"
+						];
+						path = with pkgs;
+						[
+							iproute2
+						];
+						script =
+						''
+							ip link delete wg0
 						'';
 					};
 				};
@@ -238,7 +258,7 @@
 					routes =
 					[
 						{
-							address = "74.113.97.95";
+							address = "74.113.97.90";
 							prefixLength = 32;
 							via = "192.168.0.1";
 						}
@@ -287,19 +307,19 @@
 							[
 								"0.0.0.0/0"
 							];
-							endpoint = "74.113.97.95:51820";
+							endpoint = "74.113.97.90:51820";
 							persistentKeepalive = 25;
 						}
 					];
 				};
-			#	wg2 =
-			#	{
-			#		ips =
-			#		[
-			#			"172.16.1.1/24"
-			#		];
-			#		listenPort = 51820;
-			#		privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+				wg1 =
+				{
+					ips =
+					[
+						"172.16.1.1/24"
+					];
+					listenPort = 51820;
+					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
 			#		peers =
 			#		[
 			#			{
@@ -311,7 +331,7 @@
 			#				];
 			#			}
 			#		];
-			#	};
+				};
 			};
 		};
 		firewall =
@@ -380,26 +400,6 @@
 				"d /srv/share 0777 root root -"
 				"d /srv/server 0777 root root -"
 			];
-		};
-		services =
-		{
-			cleanup-initrd-wireguard =
-			{
-				description = "Tear down initrd WireGuard interface";
-				wantedBy =
-				[
-					"network-online.target"
-				];
-				after =
-				[
-					"network-online.target"
-				];
-				serviceConfig =
-				{
-					Type = "oneshot";
-					ExecStart = "${pkgs.iproute2}/bin/ip link delete wg1";
-				};
-			};
 		};
 	};
 
