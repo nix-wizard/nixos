@@ -320,17 +320,17 @@
 					];
 					listenPort = 51820;
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-			#		peers =
-			#		[
-			#			{
-			#				name = "server1";
-			#				publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
-			#				allowedIPs =
-			#				[
-			#					"172.16.1.2/32"
-			#				];
-			#			}
-			#		];
+					peers =
+					[
+						{
+							name = "server1";
+							publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.2/32"
+							];
+						}
+					];
 				};
 			};
 		};
