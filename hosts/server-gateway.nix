@@ -383,10 +383,10 @@
 		nat =
 		{
 			enable = true;
-			externalInterface = "eno1";
+			externalInterface = "wg0";
 			internalInterfaces =
 			[
-				"wg0"
+				"enp1s0"
 			];
 		};
 	};
