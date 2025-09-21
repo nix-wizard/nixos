@@ -20,4 +20,18 @@
 			(builtins.readFile ../pubkeys/server-gateway.pub)
 		];
 	};
+	"server1-wireguard-private.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/server1.pub)
+		];
+	};
+	"server1-initrd-wireguard-private.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/server1.pub)
+		];
+	};
 }

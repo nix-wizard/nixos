@@ -74,7 +74,7 @@
 							};
 							address =
 							[
-								"74.113.97.95/24"
+								"74.113.97.90/24"
 							];
 							routes =
 							[
@@ -170,10 +170,6 @@
 							address = "74.113.97.90";
 							prefixLength = 24;
 						}
-						{
-							address = "74.113.97.95";
-							prefixLength = 24;
-						}
 					];
 				};
 			};
@@ -203,6 +199,14 @@
 							allowedIPs =
 							[
 								"172.16.0.2/32"
+							];
+						}
+						{
+							name = "server-gateway-initrd";
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-initrd-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.3/32"
 							];
 						}
 						{
@@ -250,8 +254,6 @@
 				{
 					allowedTCPPorts =
 					[
-						22
-						2222
 					];
 					allowedUDPPorts =
 					[
@@ -262,9 +264,12 @@
 				{
 					allowedTCPPorts =
 					[
+						22
+						53
 					];
 					allowedUDPPorts =
 					[
+						53
 					];
 				};
 			};
@@ -287,8 +292,6 @@
 				table ip nat {
 					chain prerouting {
 						type nat hook prerouting priority dstnat;
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 22 dnat to 172.16.0.2:22
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 2222 dnat to 172.16.0.3:2222
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 172.16.0.2:80
 						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 172.16.0.2:443
 					}
@@ -318,10 +321,28 @@
 			listenAddresses =
 			[
 				{
-					addr = "74.113.97.95";
+					addr = "172.16.0.1";
 					port = 22;
 				}
 			];
+		};
+		dnsmasq =
+		{
+			enable = true;
+			settings =
+			{
+				server =
+				[
+					"9.9.9.9"
+				];
+				address =
+				[
+					"/nixlabs-vps.nix/172.16.0.1"
+					"/server-gateway.nix/172.16.0.2"
+					"/server-gateway-initrd.nix/172.16.0.3"
+				];
+			};
+
 		};
 	};
 
