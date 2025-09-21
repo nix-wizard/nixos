@@ -201,7 +201,6 @@
 				group = "root";
 				mode = "0600";
 			};
-
 		};
 	};
 
@@ -302,6 +301,7 @@
 					peers =
 					[
 						{
+							name = "nixlabs-vps";
 							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
 							allowedIPs =
 							[
@@ -375,10 +375,6 @@
 				};
 			};
 			allowPing = true;
-			#extraCommands =
-			#''
-			#	iptables -t nat -A POSTROUTING -o wg0 -s 10.1.0.0/24 -j MASQUERADE
-			#'';
 		};
 		nat =
 		{
