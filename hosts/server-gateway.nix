@@ -366,6 +366,15 @@
 						22
 						80
 						443
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
+				"wg1"
+				{
+					allowedTCPPorts =
+					[
 						2049
 					];
 					allowedUDPPorts =
