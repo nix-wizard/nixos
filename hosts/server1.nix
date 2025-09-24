@@ -184,6 +184,11 @@
 			device = "/dev/nvme0n1p3";
 		}
 	];
+
+	time =
+	{
+		timeZone = "America/Los_Angeles";
+	};
 	
 	age =
 	{
