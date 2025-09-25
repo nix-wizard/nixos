@@ -154,6 +154,11 @@
 		};
 	};
 
+	time =
+	{
+		timeZone = "America/Chicago";
+	};
+
 	networking =
 	{
 		hostName = "nixlabs-vps";

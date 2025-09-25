@@ -108,6 +108,11 @@
 		};
 	};
 
+	time =
+	{
+		timeZone = "America/Los_Angeles";
+	};
+	
 	age =
 	{
 		secrets =
