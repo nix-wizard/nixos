@@ -371,15 +371,25 @@
 					[
 					];
 				};
-				"wg1"
+				"wg1" =
 				{
 					allowedTCPPorts =
 					[
+						111
 						2049
+						4000
+						4001
+						4002
+						20048
 					];
 					allowedUDPPorts =
 					[
+						111
 						2049
+						4000
+						4001
+						4002
+						20048
 					];
 				};
 			};
@@ -432,6 +442,12 @@
 			server =
 			{
 				enable = true;
+				lockdPort = 4001;
+				mountdPort = 4002;
+				statdPort = 4000;
+				extraNfsdConfig =
+				''
+				'';
 				exports =
 				''
 					/srv/share 172.16.0.4(rw,sync,no_subtree_check,no_root_squash) 172.16.1.2(rw,sync,no_subtree_check,no_root_squash)
@@ -449,11 +465,26 @@
 				"_default" =
 				{
 					default = true;
+					addSSL = true;
+					sslCertificate = "/etc/ssl/catchall/catchall.crt";
+					sslCertificateKey = "/etc/ssl/catchall/catchall.key";
 					locations =
 					{
 						"/" =
 						{
 							return = "404";
+						};
+					};
+				};
+				"evilfucking.website" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://172.16.1.2:8001";
 						};
 					};
 				};
