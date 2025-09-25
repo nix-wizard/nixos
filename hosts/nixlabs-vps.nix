@@ -226,22 +226,6 @@
 							];
 						}
 						{
-							name = "server1";
-							publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
-							allowedIPs =
-							[
-								"172.16.0.6/32"
-							];
-						}
-						{
-							name = "server1-initrd";
-							publicKey = (builtins.readFile ../pubkeys/server1-initrd-wireguard-public);
-							allowedIPs =
-							[
-								"172.16.0.7/32"
-							];
-						}
-						{
 							name = "otherlexi";
 							publicKey = (builtins.readFile ../pubkeys/otherlexi-wireguard-public);
 							allowedIPs =
