@@ -25,11 +25,6 @@
 		useXkbConfig = true;
 	};
 
-	time =
-	{
-		timeZone = "America/Los_Angeles";
-	};
-
 	environment =
 	{
 		systemPackages = with pkgs;
@@ -40,6 +35,8 @@
 			net-tools
 			wireguard-tools
 			dos2unix
+			openssl
+			gnupg
 		];
 		variables =
 		{
@@ -82,9 +79,9 @@
 				{
 					authorizedKeys =
 					{
-						keys =
+						keyFiles =
 						[
-							(builtins.readFile ./pubkeys/nixwiz.pub)
+							./pubkeys/nixwiz.pub
 						];
 					};
 				};
@@ -113,6 +110,36 @@
 			];
 			dates = "02:00";
 			randomizedDelaySec = "45min";
+		};
+	};
+
+	systemd =
+	{
+		services =
+		{
+			"vconsole-fix" =
+			{
+				wantedBy =
+				[
+					"multi-user.target"
+				];
+				after =
+				[
+					"systemd-modules-load.service"
+				];
+				before =
+				[
+					"getty@tty1.service"
+				];
+				script =
+				''
+					/run/current-system/sw/bin/systemctl restart systemd-vconsole-setup.service
+				'';
+				serviceConfig =
+				{
+					Type = "oneshot";
+				};
+			};
 		};
 	};
 
