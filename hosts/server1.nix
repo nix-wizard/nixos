@@ -22,9 +22,7 @@
 			];
 			kernelModules =
 			[
-				"i915"
-				"e1000e"
-				"wireguard"
+				"r8169"
 			];
 			luks =
 			{
@@ -84,84 +82,16 @@
 						};
 					};
 				};
-			#	services =
-			#	{
-			#		wireguard-setup =
-			#		{
-			#			description = "Set up WireGuard interface";
-			#			wantedBy =
-			#			[
-			#				"initrd.target"
-			#			];
-			#			before =
-			#			[
-			#				"cryptsetup.target"
-			#				"systemd-cryptsetup@cryptserver.service"
-			#			];
-			#			after =
-			#			[
-			#				"systemd-networkd.service"
-			#			];
-			#			path = with pkgs;
-			#			[
-			#				wireguard-tools
-			#				iproute2
-			#			];
-			#			unitConfig =
-			#			{
-			#				DefaultDependencies = "no";
-			#			};
-			#			serviceConfig =
-			#			{
-			#				Type = "oneshot";
-			#			};
-			#			script =
-			#			''
-			#				ip link add dev wg0 type wireguard
-
-			#				wg set wg0 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public)} endpoint 74.113.97.90:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
-
-			#				ip addr add 172.16.0.3/24 dev wg0
-			#				ip link set wg0 up
-			#			'';
-			#		};
-			#		wireguard-cleanup =
-			#		{
-			#			description = "Tear down the WireGuard interface post-cryptsetup";
-			#			wantedBy =
-			#			[
-			#				"initrd.target"
-			#			];
-			#			after =
-			#			[
-			#				"cryptsetup.target"
-			#			];
-			#			path = with pkgs;
-			#			[
-			#				iproute2
-			#			];
-			#			script =
-			#			''
-			#				ip link delete wg0
-			#			'';
-			#		};
-			#	};
-				initrdBin = with pkgs;
-				[
-					wireguard-tools
-					iproute2
-				];
-			};
-			secrets =
-			{
-			#	"/etc/wireguard/server1-initrd-wireguard-private" = config.age.secrets.server1-initrd-wireguard-private.path;
 			};
 		};
 		kernelModules =
 		[
 			"kvm_intel"
-			"e1000e"
-			"wireguard"
+			"r8169"
+		];
+		supportedFilesystems =
+		[
+			"nfs"
 		];
 		loader =
 		{
@@ -178,13 +108,6 @@
 		};
 	};
 
-	swapDevices =
-	[
-		{
-			device = "/dev/nvme0n1p3";
-		}
-	];
-	
 	age =
 	{
 		secrets =
@@ -223,6 +146,16 @@
 				"dmask=0077"
 			];
 		};
+		"/srv/share" =
+		{
+			device = "172.16.1.1:/srv/share";
+			fsType = "nfs";
+		};
+		"/srv/server" =
+		{
+			device = "172.16.1.1:/srv/server";
+			fsType = "nfs";
+		};
 	};
 
 	networking =
@@ -254,42 +187,27 @@
 		{
 			interfaces =
 			{
-			#	wg0 =
-			#	{
-			#		privateKeyFile = config.age.secrets.server1-private.path;
-			#		peers =
-			#		[
-			#			{
-			#				name = "nixlabs-vps";
-			#				publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
-			#				allowedIPs =
-			#				[
-			#					"172.16.0.0/24"
-			#				];
-			#				endpoint = "74.113.97.90:51820";
-			#				persistentKeepalive = 25;
-			#			}
-			#		];
-			#	};
-			#	wg1 =
-			#	{
-			#		ips =
-			#		[
-			#			"172.16.1.2/24"
-			#		];
-			#		privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-			#		peers =
-			#		[
-			#			{
-			#				name = "server-gateway";
-			#				publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
-			#				allowedIPs =
-			#				[
-			#					"172.16.1.0/24"
-			#				];
-			#			}
-			#		];
-			#	};
+				wg1 =
+				{
+					ips =
+					[
+						"172.16.1.2/24"
+					];
+					privateKeyFile = config.age.secrets.server1-wireguard-private.path;
+					peers =
+					[
+						{
+							name = "server-gateway";
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.0/24"
+							];
+							endpoint = "10.1.0.1:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
 			};
 		};
 		firewall =
@@ -301,15 +219,17 @@
 				{
 					allowedTCPPorts =
 					[
+						22
 					];
 					allowedUDPPorts =
 					[
 					];
 				};
-				"wg0" =
+				"wg1" =
 				{
 					allowedTCPPorts =
 					[
+						8001
 					];
 					allowedUDPPorts =
 					[
@@ -317,6 +237,43 @@
 				};
 			};
 			allowPing = true;
+		};
+	};
+
+	systemd =
+	{
+		tmpfiles =
+		{
+			rules =
+			[
+				"d /srv/share 0777 root root -"
+				"d /srv/server 0777 root root -"
+			];
+		};
+		services =
+		{
+			snac =
+			{
+				description = "Start snac2 service";
+				wantedBy =
+				[
+					"multi-user.target"
+				];
+				after =
+				[
+					"network.target"
+				];
+				serviceConfig =
+				{
+					ExecStart = "${pkgs.snac2}/bin/snac httpd /srv/server/server1/home/snacusr/snac-data";
+					User = "snacusr";
+					WorkingDirectory = "/srv/server/server1/home/snacusr/snac-data";
+					Restart = "always";
+					Environment = "DEBUG=1";
+					StandardOutput = "journal";
+					StandardError = "journal";
+				};
+			};
 		};
 	};
 
@@ -328,7 +285,7 @@
 			settings =
 			{
 				PermitRootLogin = "yes";
-				PasswordAuthentication = true;
+				PasswordAuthentication = false;
 				KbdInteractiveAuthentication = false;
 			};
 			listenAddresses =
@@ -338,6 +295,32 @@
 					port = 22;
 				}
 			];
+		};
+	};
+
+	users =
+	{
+		users =
+		{
+			root =
+			{
+				openssh =
+				{
+					authorizedKeys =
+					{
+						keyFiles =
+						[
+							../pubkeys/server-gateway-root-ssh.pub
+						];
+					};
+				};
+			};
+			snacusr =
+			{
+				isNormalUser = true;
+				home = "/srv/server/server1/home/snacusr";
+				description = "snac2 user";
+			};
 		};
 	};
 	
@@ -374,6 +357,7 @@
 	{
 		systemPackages = with pkgs;
 		[
+			snac2
 		];
 	};
 

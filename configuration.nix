@@ -82,9 +82,9 @@
 				{
 					authorizedKeys =
 					{
-						keys =
+						keyFiles =
 						[
-							(builtins.readFile ./pubkeys/nixwiz.pub)
+							./pubkeys/nixwiz.pub
 						];
 					};
 				};
