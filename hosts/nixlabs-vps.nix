@@ -231,6 +231,14 @@
 							];
 						}
 						{
+							name = "chloe";
+							publicKey = (builtins.readFile ../pubkeys/chloe-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.67/32"
+							];
+						}
+						{
 							name = "otherlexi";
 							publicKey = (builtins.readFile ../pubkeys/otherlexi-wireguard-public);
 							allowedIPs =
@@ -288,26 +296,24 @@
 			[
 				"wg0"
 			];
-		};
-		nftables =
-		{
-			enable = true;
-			ruleset =
-			''
-				table ip nat {
-					chain prerouting {
-						type nat hook prerouting priority dstnat;
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 80 dnat to 172.16.0.2:80
-						iifname "enp3s0" ip daddr 74.113.97.90 tcp dport 443 dnat to 172.16.0.2:443
-					}
-
-					chain postrouting {
-						type nat hook postrouting priority srcnat;
-						ip daddr 172.16.0.0/24 return
-						oifname "wg0" masquerade
-					}
+			forwardPorts =
+			[
+				{
+					sourcePort = 80;
+					proto = "tcp";
+					destination = "172.16.0.2:80";
 				}
-			'';
+				{
+					sourcePort = 443;
+					proto = "tcp";
+					destination = "172.16.0.2:443";
+				}
+				{
+					sourcePort = 22;
+					proto = "tcp";
+					destination = "172.16.0.2:2222";
+				}
+			];
 		};
 
 	};
@@ -342,11 +348,9 @@
 				];
 				address =
 				[
-					"/nixlabs-vps.nix/172.16.0.1"
-					"/server-gateway.nix/172.16.0.2"
-					"/server-gateway-initrd.nix/172.16.0.3"
-					"/server1.nix/172.16.0.6"
-					"/server1-initrd/172.16.0.7"
+					"/nixlabs-vps.nixlabs-vps/172.16.0.1"
+					"/server-gateway.nixlabs-vps/172.16.0.2"
+					"/server-gateway-initrd.nixlabs-vps/172.16.0.3"
 				];
 			};
 
