@@ -44,6 +44,14 @@
 		};
 	};
 
+	services =
+	{
+		openssh =
+		{
+			openFirewall = false;
+		};
+	};
+
 	programs =
 	{
 		neovim =
@@ -87,15 +95,6 @@
 				};
 			};
 		};
-	};
-
-	networking =
-	{
-		nameservers =
-		[
-			"9.9.9.9"
-			"1.1.1.1"
-		];
 	};
 
 	system =
