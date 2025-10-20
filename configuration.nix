@@ -37,6 +37,7 @@
 			dos2unix
 			openssl
 			gnupg
+			busybox
 		];
 		variables =
 		{

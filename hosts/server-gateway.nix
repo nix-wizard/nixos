@@ -36,11 +36,11 @@
 					};
 					cryptshare =
 					{
-						device = "/dev/sda";
+						device = "/dev/disk/by-uuid/74519cf0-f16d-40be-b2b0-a3b7f0c40e87";
 					};
 					cryptserver =
 					{
-						device = "/dev/sdb";
+						device = "/dev/disk/by-uuid/60ef38f7-23bf-4295-95bb-7d50deb5c737";
 					};
 				};
 			};
@@ -335,6 +335,22 @@
 								"172.16.1.2/32"
 							];
 						}
+						{
+							name = "server1-initrd";
+							publicKey = (builtins.readFile ../pubkeys/server1-initrd-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.3/32"
+							];
+						}
+						{
+							name = "nixwiz";
+							publicKey = (builtins.readFile ../pubkeys/nixwiz-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.4/32"
+							];
+						}
 					];
 				};
 			};
@@ -348,7 +364,6 @@
 				{
 					allowedTCPPorts =
 					[
-						22
 					];
 					allowedUDPPorts =
 					[
@@ -368,19 +383,22 @@
 				{
 					allowedTCPPorts =
 					[
-						22
 						80
 						443
+						2222
 					];
 					allowedUDPPorts =
 					[
+						51820
 					];
 				};
 				"wg1" =
 				{
 					allowedTCPPorts =
 					[
+						22
 						111
+						53
 						2049
 						4000
 						4001
@@ -390,6 +408,7 @@
 					allowedUDPPorts =
 					[
 						111
+						53
 						2049
 						4000
 						4001
@@ -406,7 +425,15 @@
 			externalInterface = "wg0";
 			internalInterfaces =
 			[
-				"enp1s0"
+				"wg1"
+			];
+			forwardPorts =
+			[
+				{
+					sourcePort = 2222;
+					proto = "tcp";
+					destination = "172.16.1.2:2222";
+				}
 			];
 		};
 	};
@@ -417,8 +444,8 @@
 		{
 			rules =
 			[
-				"d /srv/share 0777 root root -"
-				"d /srv/server 0777 root root -"
+				"d /srv/share 0755 root root -"
+				"d /srv/server 0755 root root -"
 			];
 		};
 	};
@@ -437,7 +464,7 @@
 			listenAddresses =
 			[
 				{
-					addr = "0.0.0.0";
+					addr = "172.16.1.1";
 					port = 22;
 				}
 			];
@@ -450,14 +477,28 @@
 				lockdPort = 4001;
 				mountdPort = 4002;
 				statdPort = 4000;
-				extraNfsdConfig =
-				''
-				'';
 				exports =
 				''
-					/srv/share 172.16.0.4(rw,sync,no_subtree_check,no_root_squash) 172.16.1.2(rw,sync,no_subtree_check,no_root_squash)
-					/srv/server 172.16.1.2(rw,sync,no_subtree_check,no_root_squash)
+					/srv/share server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
+					/srv/server/servers/server1 server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 				'';
+			};
+		};
+		dnsmasq =
+		{
+			enable = true;
+			settings =
+			{
+				server =
+				[
+					"172.16.0.1"
+				];
+				address =
+				[
+					"/server-gateway.server-gateway/172.16.1.1"
+					"/server1.server-gateway/172.16.1.2"
+					"/server1-initrd.server-gateway/172.16.1.3"
+				];
 			};
 		};
 		nginx =
@@ -481,6 +522,18 @@
 						};
 					};
 				};
+				"vault.nixwiz.one" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://server1.server-gateway:8003";
+						};
+					};
+				};
 				"evilfucking.website" =
 				{
 					enableACME = true;
@@ -489,7 +542,19 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://172.16.1.2:8001";
+							proxyPass = "http://server1.server-gateway:8002";
+						};
+					};
+				};
+				"freepenis.nixlabs.dev" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://server1.server-gateway:8005";
 						};
 					};
 				};
@@ -527,6 +592,29 @@
 			{
 				email = "nixwiz@nixwiz.one";
 			};
+		};
+	};
+
+	users =
+	{
+		users =
+		{
+			#chloe = # i'm not doing this shit again
+			#{
+			#	isNormalUser = true;
+			#	home = "/home/chloe";
+			#	description = "DEATH TO AMERICA!";
+			#	openssh =
+			#	{
+			#		authorizedKeys =
+			#		{
+			#			keyFiles =
+			#			[
+			#				../pubkeys/chloe.pub
+			#			];
+			#		};
+			#	};
+			#};
 		};
 	};
 
