@@ -303,6 +303,7 @@
 				wg0 =
 				{
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
+					mtu = 1280;
 					peers =
 					[
 						{
@@ -324,6 +325,7 @@
 						"172.16.1.1/24"
 					];
 					listenPort = 51820;
+					mtu = 1280;
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
 					peers =
 					[
@@ -429,11 +431,6 @@
 			];
 			forwardPorts =
 			[
-				{
-					sourcePort = 2222;
-					proto = "tcp";
-					destination = "172.16.1.2:2222";
-				}
 			];
 		};
 	};
@@ -504,8 +501,27 @@
 		nginx =
 		{
 			enable = true;
+			package = pkgs.nginx.override
+			{
+				withSlice = true;
+			};
 			recommendedProxySettings = true;
 			recommendedTlsSettings = true;
+			recommendedOptimisation = true;
+			recommendedGzipSettings = true;
+			proxyCachePath =
+			{
+				"akkoma-media-cache" =
+				{
+					enable = true;
+					levels = "1:2";
+					keysZoneName = "akkoma_media_cache";
+					keysZoneSize = "10m";
+					maxSize = "1g";
+					inactive = "720m";
+					useTempPath = false;
+				};
+			};
 			virtualHosts =
 			{
 				"_default" =
@@ -526,15 +542,78 @@
 				{
 					enableACME = true;
 					forceSSL = true;
+					http2 = true;
 					locations =
 					{
 						"/" =
 						{
-							proxyPass = "http://server1.server-gateway:8003";
+							proxyPass = "http://172.16.1.2:8003";
+							proxyWebsockets = true;
 						};
 					};
+					extraConfig =
+					''
+						client_max_body_size 525M;
+					'';
 				};
 				"evilfucking.website" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					http2 = true;
+					locations =
+					{
+						"~ ^/(media|proxy)" =
+						{
+							return = "404";
+						};
+						"/" =
+						{
+							proxyPass = "http://172.16.1.2:8002";
+							proxyWebsockets = true;
+						};
+					};
+					extraConfig =
+					''
+						client_max_body_size 16m;
+						ignore_invalid_headers off;
+					'';
+				};
+				"media.evilfucking.website" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					http2 = true;
+					locations =
+					{
+						"~ ^/(media|proxy)" =
+						{
+							proxyPass = "http://172.16.1.2:8002";
+							extraConfig =
+							''
+								slice 1m;
+								proxy_cache akkoma_media_cache;
+								proxy_cache_key $host$uri$is_args$args$slice_range;
+								proxy_set_header Range $slice_range;
+								proxy_cache_valid  200 206 301 304 1h;
+								proxy_cache_lock on;
+								proxy_ignore_client_abort on;
+								proxy_buffering on;
+								chunked_transfer_encoding on;
+							'';
+						};
+						"/" =
+						{
+							return = "404";
+						};
+					};
+					extraConfig =
+					''
+						client_max_body_size 16m;
+						ignore_invalid_headers off;
+					'';
+				};
+				"fedi.nixwiz.one" =
 				{
 					enableACME = true;
 					forceSSL = true;
@@ -542,7 +621,7 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://server1.server-gateway:8002";
+							return = "410";
 						};
 					};
 				};
@@ -554,7 +633,7 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://server1.server-gateway:8005";
+							proxyPass = "http://172.16.1.2:8005";
 						};
 					};
 				};
