@@ -195,6 +195,7 @@
 						"172.16.0.1/24"
 					];
 					listenPort = 51820;
+					mtu = 1280;
 					privateKeyFile = config.age.secrets.nixlabs-vps-wireguard-private.path;
 					peers =
 					[
@@ -231,11 +232,27 @@
 							];
 						}
 						{
+							name = "nixwiz_phone";
+							publicKey = (builtins.readFile ../pubkeys/nixwiz_phone-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.6/32"
+							];
+						}
+						{
 							name = "chloe";
 							publicKey = (builtins.readFile ../pubkeys/chloe-wireguard-public);
 							allowedIPs =
 							[
 								"172.16.0.67/32"
+							];
+						}
+						{
+							name = "chloe_hawktuah";
+							publicKey = (builtins.readFile ../pubkeys/chloe_hawktuah-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.61/32"
 							];
 						}
 						{
@@ -307,11 +324,6 @@
 					sourcePort = 443;
 					proto = "tcp";
 					destination = "172.16.0.2:443";
-				}
-				{
-					sourcePort = 22;
-					proto = "tcp";
-					destination = "172.16.0.2:2222";
 				}
 			];
 		};
