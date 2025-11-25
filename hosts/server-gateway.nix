@@ -353,6 +353,14 @@
 								"172.16.1.4/32"
 							];
 						}
+						{
+							name = "nixwiz_phone";
+							publicKey = (builtins.readFile ../pubkeys/nixwiz_phone-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.5/32"
+							];
+						}
 					];
 				};
 			};
@@ -633,9 +641,16 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://172.16.1.2:8005";
+							proxyPass = "http://172.16.1.2:8004";
 						};
 					};
+					extraConfig =
+					''
+						location ~* /\.git
+						{
+							return 404;
+						}
+					'';
 				};
 			};
 		};
