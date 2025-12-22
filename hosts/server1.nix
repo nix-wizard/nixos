@@ -307,6 +307,7 @@
 					[
 						"172.16.1.2/24"
 					];
+					mtu = 1280;
 					privateKeyFile = config.age.secrets.server1-wireguard-private.path;
 					peers =
 					[
@@ -343,6 +344,7 @@
 					allowedTCPPorts =
 					[
 						22
+						80
 						8001
 					];
 					allowedUDPPorts =
@@ -372,35 +374,12 @@
 			];
 			externalInterface = "wg1";
 			enableIPv6 = false;
-			forwardPorts =
-			[
-				{
-					sourcePort = 8002;
-					proto = "tcp";
-					destination = "10.1.2.2:8080";
-				}
-				{
-					sourcePort = 8003;
-					proto = "tcp";
-					destination = "10.1.2.3:8080";
-				}
-				{
-					sourcePort = 2222;
-					proto = "tcp";
-					destination = "10.1.2.4:22";
-				}
-				{
-					sourcePort = 8005;
-					proto = "tcp";
-					destination = "10.1.2.5:80";
-				}
-			];
 		};
 	};
 
 	containers =
 	{
-		snac =
+		fedi =
 		{
 			autoStart = true;
 			privateNetwork = true;
@@ -410,7 +389,7 @@
 			{
 				"/" =
 				{
-					hostPath = "/srv/server/containers/snac/";
+					hostPath = "/srv/server/containers/fedi/";
 					isReadOnly = false;
 				};
 			};
@@ -448,67 +427,84 @@
 					useHostResolvConf = lib.mkForce false;
 				};
 
-				users =
+				services =
 				{
-					users =
+					akkoma =
 					{
-						snac =
+						enable = true;
+						config =
 						{
-							description = "snac2 user";
-							isNormalUser = true;
-							home = "/home/snac";
-						};
-					};
-				};
-
-				systemd =
-				{
-					services =
-					{
-						snac =
-						{
-							description = "snac2 ActivityPub instance";
-							wantedBy =
-							[
-								"multi-user.target"
-							];
-							after =
-							[
-								"network-online.target"
-							];
-							requires =
-							[
-								"network-online.target"
-							];
-							serviceConfig =
+							":pleroma" =
 							{
-								ExecStart = "${pkgs.snac2}/bin/snac httpd /home/snac/snacdata";
-								User = "snac";
-								WorkingDirectory = "/home/snac/snacdata";
-								Restart = "always";
-								Environment = "DEBUG=1";
-								StandardOutput = "journal";
-								StandardError = "journal";
+								":instance" =
+								{
+									name = "evil fucking website";
+									description = "terrible personal fedi server";
+									email = "nixwiz@nixwiz.one";
+									registrations_open = true;
+									account_approval_required = true;
+									federating = true;
+									allow_relay = true;
+								};
+								"Pleroma.Web.Endpoint" =
+								{
+									http =
+									{
+										ip = "0.0.0.0";
+										port = 8080;
+									};
+									url =
+									{
+										host = "evilfucking.website";
+									};
+								};
+								"Pleroma.Upload" =
+								{
+									base_url = "https://media.evilfucking.website/media";
+								};
+							};
+						};
+						extraStatic =
+						{
+							"emoji/neocat" = pkgs.fetchzip
+							{
+								url = "https://strapi.volpeon.ink/uploads/neocat_5359f48261.zip";
+								hash = "sha256-+oGg5H1o7MOLrZv0efpiW65OKH9veHM7EHsTmtPMrNQ=";
+								stripRoot = false;
+							};
+							"emoji/neofox" = pkgs.fetchzip
+							{
+								url = "https://strapi.volpeon.ink/uploads/neofox_e17e757433.zip";
+								hash = "sha256-OS8pT/YGKhfNGaIngU+EwnbVZCkZbnRWaTTYI+q0gpg=";
+								stripRoot = false;
+							};
+							"static/logo.png" = pkgs.copyPathToStore ../files/akkoma/logo.png;
+							"favicon.png" = pkgs.copyPathToStore ../files/akkoma/logo.png;
+							"emoji/other/viska.png" = pkgs.fetchurl
+							{
+								url = "https://static.wikia.nocookie.net/mspaintadventures/images/8/81/Vriska_Serket.png";
+								hash = "sha256-33Y1yCbGijvH/mW8tTcvlRlfPEPSehgtyYIue2d60SM=";
+							};
+							"emoji/other/tezi.png" = pkgs.fetchurl
+							{
+								url = "https://static.wikia.nocookie.net/mspaintadventures/images/9/96/Terezi_Pyrope.png";
+								hash = "sha256-SYj8uHnAxTl3ESgr/jGgCtTob4yXmcH1nyQQHs5H6mk=";
 							};
 						};
 					};
-				};
-
-				environment =
-				{
-					systemPackages = with pkgs;
-					[
-						snac2
-					];
+					postgresql =
+					{
+						enable = true;
+					};
 				};
 
 				system =
 				{
-					stateVersion = "25.11";
+					stateVersion = "25.05";
 				};
 			};
 		};
-		vaultwarden =
+		passwordmanager =
 		{
 			autoStart = true;
 			privateNetwork = true;
@@ -518,7 +514,7 @@
 			{
 				"/" =
 				{
-					hostPath = "/srv/server/containers/vaultwarden/";
+					hostPath = "/srv/server/containers/passwordmanager/";
 					isReadOnly = false;
 				};
 			};
@@ -562,27 +558,71 @@
 					{
 						enable = true;
 					};
+					postgresql =
+					{
+						enable = true;
+						ensureDatabases =
+						[
+							"vaultwarden"
+						];
+						ensureUsers =
+						[
+							{
+								name = "vaultwarden";
+								ensureDBOwnership = true;
+								ensureClauses =
+								{
+									login = true;
+								};
+							}
+						];
+						authentication =
+						''
+							local vaultwarden vaultwarden trust
+							host all all 127.0.0.1/32 trust
+						'';
+					};
 					vaultwarden =
 					{
 						enable = true;
+						dbBackend = "postgresql";
 						config =
 						{
 							DOMAIN = "https://vault.nixwiz.one";
-							SIGNUPS_ALLOWED = false;
+							SIGNUPS_ALLOWED = true;
 							ROCKET_ADDRESS = "0.0.0.0";
 							ROCKET_PORT = 8080;
 							ROCKET_LOG = "critical";
+							DATABASE_URL = "postgresql:///vaultwarden?host=/run/postgresql";
+						};
+					};
+				};
+				
+				systemd =
+				{
+					services =
+					{
+						vaultwarden =
+						{
+							after =
+							[
+								"postgresql.service"
+							];
+							requires =
+							[
+								"postgresql.service"
+							];
 						};
 					};
 				};
 
 				system =
 				{
-					stateVersion = "25.11";
+					stateVersion = "25.05";
 				};
 			};
 		};
-		git =
+		static =
 		{
 			autoStart = true;
 			privateNetwork = true;
@@ -592,85 +632,13 @@
 			{
 				"/" =
 				{
-					hostPath = "/srv/server/containers/git";
+					hostPath = "/srv/server/containers/static";
 					isReadOnly = false;
 				};
-			};
-			config =
-			{
-				config,
-				pkgs,
-				libs,
-				...
-			}:
-			{
-				networking =
+				"/srv/www" =
 				{
-					defaultGateway =
-					{
-						address = "10.1.2.1";
-						interface = "eth0";
-					};
-					nameservers =
-					[
-						"10.1.2.1"
-					];
-					firewall =
-					{
-						enable = true;
-						allowPing = true;
-						allowedTCPPorts =
-						[
-							22
-						];
-						allowedUDPPorts =
-						[
-						];
-					};
-					useHostResolvConf = lib.mkForce false;
-				};
-
-				services =
-				{
-					resolved =
-					{
-						enable = true;
-					};
-					openssh =
-					{
-						enable = true;
-						settings =
-						{
-							PasswordAuthentication = false;
-							KbdInteractiveAuthentication = false;
-						};
-					};
-					gitolite =
-					{
-						enable = true;
-						user = "git";
-						adminPubkey = (builtins.readFile ../pubkeys/nixwiz.pub);
-					};
-				};
-				
-				system =
-				{
-					stateVersion = "25.11";
-				};
-			};
-		};
-		freepenis =
-		{
-			autoStart = true;
-			privateNetwork = true;
-			hostBridge = "br0";
-			localAddress = "10.1.2.5";
-			bindMounts =
-			{
-				"/" =
-				{
-					hostPath = "/srv/server/containers/freepenis";
-					isReadOnly = false;
+					hostPath = "/srv/server/www";
+					isReadOnly = true;
 				};
 			};
 			config =
@@ -699,6 +667,7 @@
 						allowedTCPPorts =
 						[
 							80
+							8080
 						];
 						allowedUDPPorts =
 						[
@@ -713,22 +682,20 @@
 					{
 						enable = true;
 					};
-					nginx =
+					merecat =
 					{
 						enable = true;
-						virtualHosts =
+						settings =
 						{
-							"freepenis.nixlabs.dev" =
-							{
-								root = "/var/www/freepenis.nixlabs.dev";
-							};
+							directory = "/srv/www";
+							virtual-host = true;
 						};
 					};
 				};
-
+				
 				system =
 				{
-					stateVersion = "25.11";
+					stateVersion = "25.05";
 				};
 			};
 		};
@@ -777,9 +744,126 @@
 				address =
 				[
 					"/server1.server1/10.1.2.1"
-					"/snac.server1/10.1.2.2"
-					"/vaultwarden.server1/10.1.2.3"
+					"/fedi.server1/10.1.2.2"
+					"/passwordmanager.server1/10.1.2.3"
+					"/static.server1/10.1.2.4"
 				];
+			};
+		};
+		gitolite =
+		{
+			enable = true;
+			user = "git";
+			adminPubkey = (builtins.readFile ../pubkeys/nixwiz.pub);
+			dataDir = "/srv/server/git";
+		};
+		nginx =
+		{
+			enable = true;
+			recommendedProxySettings = true;
+			recommendedOptimisation = true;
+			clientMaxBodySize = "2g";
+			virtualHosts =
+			{
+				"_default" =
+				{
+					default = true;
+					locations =
+					{
+						"/" =
+						{
+							return = "404";
+						};
+					};
+				};
+				"nixwiz.network" =
+				{
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://10.1.2.4:80/public/";
+						};
+						"/share" =
+						{
+							proxyPass = "http://10.1.2.4:80/public/share";
+							extraConfig =
+							''
+								add_header Access-Control-Allow-Origin * always;
+							'';
+						};
+					};
+				};
+				"nixwiz.one" =
+				{
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://10.1.2.4:80";
+						};
+					};
+				};
+				"vault.nixwiz.one" =
+				{
+					http2 = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://10.1.2.3:8080";
+							proxyWebsockets = true;
+						};
+					};
+				};
+				"evilfucking.website" =
+				{
+					locations =
+					{
+						"~ ^/(media|proxy)" =
+						{
+							return = "404";
+						};
+						"/" =
+						{
+							proxyPass = "http://10.1.2.2:8080";
+							proxyWebsockets = true;
+						};
+					};
+					extraConfig =
+					''
+						ignore_invalid_headers off;
+					'';
+				};
+				"media.evilfucking.website" =
+				{
+					http2 = true;
+					locations =
+					{
+						"~ ^/(media|proxy)" =
+						{
+							proxyPass = "http://10.1.2.2:8080";
+						};
+						"/" =
+						{
+							return = "404";
+						};
+					};
+					extraConfig =
+					''
+						ignore_invalid_headers off;
+					'';
+				};
+				"freepenis.nixlabs.dev" =
+				{
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://10.1.2.4:80/public/";
+						};
+					};
+				};
 			};
 		};
 	};
@@ -813,10 +897,26 @@
 		enableRedistributableFirmware = true;
 	};
 
+	users =
+	{
+		groups =
+		{
+			www =
+			{
+				members =
+				[
+					"git"
+				];
+			};
+		};
+	};
+
 	environment =
 	{
 		systemPackages = with pkgs;
 		[
+			stagit
+			md4c
 		];
 	};
 
@@ -827,6 +927,6 @@
 
 	system =
 	{
-		stateVersion = "25.11";
+		stateVersion = "25.05";
 	};
 }
