@@ -546,6 +546,30 @@
 						};
 					};
 				};
+				"nixwiz.network" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://172.16.1.2:80";
+						};
+					};
+				};
+				"nixwiz.one" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://172.16.1.2:80";
+						};
+					};
+				};
 				"vault.nixwiz.one" =
 				{
 					enableACME = true;
@@ -555,7 +579,7 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://172.16.1.2:8003";
+							proxyPass = "http://172.16.1.2:80";
 							proxyWebsockets = true;
 						};
 					};
@@ -577,7 +601,7 @@
 						};
 						"/" =
 						{
-							proxyPass = "http://172.16.1.2:8002";
+							proxyPass = "http://172.16.1.2:80";
 							proxyWebsockets = true;
 						};
 					};
@@ -596,7 +620,7 @@
 					{
 						"~ ^/(media|proxy)" =
 						{
-							proxyPass = "http://172.16.1.2:8002";
+							proxyPass = "http://172.16.1.2:80";
 							extraConfig =
 							''
 								slice 1m;
@@ -641,16 +665,9 @@
 					{
 						"/" =
 						{
-							proxyPass = "http://172.16.1.2:8004";
+							proxyPass = "http://172.16.1.2:80";
 						};
 					};
-					extraConfig =
-					''
-						location ~* /\.git
-						{
-							return 404;
-						}
-					'';
 				};
 			};
 		};
