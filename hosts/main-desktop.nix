@@ -24,6 +24,7 @@
 		kernelModules =
 		[
 			"kvm-amd"
+			"unput"
 		];
 		initrd =
 		{
@@ -72,6 +73,18 @@
 		{
 			enable = true;
 		};
+		opentabletdriver =
+		{
+			enable = true;
+			daemon =
+			{
+				enable = true;
+			};
+		};
+		uinput =
+		{
+			enable = true;
+		};
 		nvidia =
 		{
 			modesetting =
@@ -94,13 +107,20 @@
 			};
 		};
 	};
-	
-	swapDevices =
-	[
+
+	age =
+	{
+		secrets =
 		{
-			device = "/dev/vol/swap";
-		}
-	];
+			main-desktop-wireguard-private =
+			{
+				file = ../secrets/main-desktop-wireguard-private.age;
+				owner = "root";
+				group = "root";
+				mode = "0600";
+			};
+		};
+	};
 	
 	networking =
 	{
@@ -146,9 +166,60 @@
 				};
 			};
 		};
+		wireguard =
+		{
+			interfaces =
+			{
+				wg0 =
+				{
+					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
+					mtu = 1280;
+					ips =
+					[
+						"172.16.0.4/24"
+					];
+					peers =
+					[
+						{
+							name = "nixlabs-vps";
+							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.0/24"
+							];
+							endpoint = "74.113.97.90:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
+				wg1 =
+				{
+					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
+					mtu = 1280;
+					ips =
+					[
+						"172.16.1.4/24"
+					];
+					peers =
+					[
+						{
+							name = "server-gateway";
+							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.0/24"
+							];
+							endpoint = "192.168.0.152:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
+			};
+		};
 		nameservers =
 		[
-			"10.0.0.1"
+			"172.16.1.1"
+			"9.9.9.9"
 		];
 	};
   	
@@ -163,6 +234,10 @@
 			enable = true;
 		};
 		openssh =
+		{
+			enable = true;
+		};
+		udisks2 =
 		{
 			enable = true;
 		};
@@ -204,7 +279,7 @@
 			];
 			windowManager =
 			{
-				fvwm3 =
+				dwm =
 				{
 					enable = true;
 				};
@@ -223,7 +298,7 @@
 	{
 		"/" =
 		{
-			device = "/dev/vol/root";
+			device = "/dev/mapper/cryptroot";
 			fsType = "ext4";
 		};
 		"/boot" =
@@ -234,6 +309,17 @@
 			[
 				"fmask=0077"
 				"dmask=0077"
+			];
+		};
+		"/srv/share" =
+		{
+			device = "server-gateway.server-gateway:/srv/share";
+			fsType = "nfs";
+			options =
+			[
+				"_netdev"
+				"x-systemd.requires=wireguard-wg0-peer-nixlabs-vps.service"
+				"x-systemd.requires=wireguard-wg1-peer-server-gateway.service"
 			];
 		};
 	};
@@ -256,6 +342,23 @@
 					"tty"
 					"video"
 					"input"
+				];
+			};
+		};
+		groups =
+		{
+			ssd =
+			{
+				members =
+				[
+					"nixwiz"
+				];
+			};
+			share =
+			{
+				members =
+				[
+					"nixwiz"
 				];
 			};
 		};
@@ -310,8 +413,19 @@
 		};
 	};
 
+	systemd =
+	{
+		tmpfiles =
+		{
+			rules =
+			[
+				"d /srv/share 0775 root share - -"
+			];
+		};
+	};
+
 	system =
 	{
-		stateVersion = "24.11";
+		stateVersion = "25.11";
 	};
 }

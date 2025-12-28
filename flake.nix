@@ -109,6 +109,22 @@
 				[
 					./configuration.nix
 					./hosts/main-desktop.nix
+					agenix.nixosModules.default
+					(
+						{
+							pkgs,
+							...
+						}:
+						{
+							environment =
+							{
+								systemPackages =
+								[
+									agenix.packages.x86_64-linux.default
+								];
+							};
+						}
+					)
 				];
 			};
 		};

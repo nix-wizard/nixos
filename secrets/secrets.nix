@@ -34,4 +34,11 @@
 			(builtins.readFile ../pubkeys/server1.pub)
 		];
 	};
+	"main-desktop-wireguard-private.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/main-desktop.pub)
+		];
+	};
 }
