@@ -345,7 +345,7 @@
 					[
 						22
 						80
-						8001
+						6600
 					];
 					allowedUDPPorts =
 					[
@@ -374,6 +374,14 @@
 			];
 			externalInterface = "wg1";
 			enableIPv6 = false;
+			forwardPorts =
+			[
+				{
+					destination = "10.1.2.5:6600";
+					proto = "tcp";
+					sourcePort = 6600;
+				}
+			];
 		};
 	};
 
@@ -699,6 +707,107 @@
 				};
 			};
 		};
+		media =
+		{
+			autoStart = true;
+			privateNetwork = true;
+			hostBridge = "br0";
+			localAddress = "10.1.2.5";
+			bindMounts =
+			{
+				"/" =
+				{
+					hostPath = "/srv/server/containers/media";
+					isReadOnly = false;
+				};
+				"/srv/music" =
+				{
+					hostPath = "/srv/share/media/MUSIC";
+					isReadOnly = true;
+				};
+			};
+			config =
+			{
+				config,
+				pkgs,
+				libs,
+				...
+			}:
+			{
+				networking =
+				{
+					defaultGateway =
+					{
+						address = "10.1.2.1";
+						interface = "eth0";
+					};
+					nameservers =
+					[
+						"10.1.2.1"
+					];
+					firewall =
+					{
+						enable = true;
+						allowPing = true;
+						allowedTCPPorts =
+						[
+							6600
+							8080
+							8081
+						];
+						allowedUDPPorts =
+						[
+						];
+					};
+					useHostResolvConf = lib.mkForce false;
+				};
+				
+				services =
+				{
+					resolved =
+					{
+						enable = true;
+					};
+					mpd =
+					{
+						enable = true;
+						musicDirectory = "/srv/music";
+						network =
+						{
+							listenAddress = "any";
+						};
+						extraConfig =
+						''
+							audio_output {
+								type "httpd"
+								name "nixwiz music stream"
+								bind_to_address "0.0.0.0"
+								port "8080"
+								encoder "flac"
+								compression "8"
+								format "44100:16:2"
+								website "https://music.nixwiz.one/"
+							}
+							audio_output {
+								type "httpd"
+								name "low quality nixwiz music stream"
+								bind_to_address "0.0.0.0"
+								port "8081"
+								encoder "opus"
+								bitrate "64000"
+								format "48000:16:2"
+								website "https://music.nixwiz.one/lq/"
+							}
+						'';
+					};
+				};
+				
+				system =
+				{
+					stateVersion = "25.05";
+				};
+			};
+		};
 	};
 
 	systemd =
@@ -747,6 +856,7 @@
 					"/fedi.server1/10.1.2.2"
 					"/passwordmanager.server1/10.1.2.3"
 					"/static.server1/10.1.2.4"
+					"/music.server1/10.1.2.5"
 				];
 			};
 		};
@@ -756,6 +866,7 @@
 			user = "git";
 			adminPubkey = (builtins.readFile ../pubkeys/nixwiz.pub);
 			dataDir = "/srv/server/git";
+	
 		};
 		nginx =
 		{
@@ -864,6 +975,27 @@
 						};
 					};
 				};
+				"music.nixwiz.one" =
+				{
+					http2 = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://10.1.2.5:8080";
+						};
+						"/lq" =
+						{
+							proxyPass = "http://10.1.2.5:8081";
+						};
+					};
+					extraConfig =
+					''
+						proxy_buffering off;
+						proxy_read_timeout 300s;
+						proxy_connect_timeout 300s;
+					'';
+				};
 			};
 		};
 	};
@@ -887,6 +1019,10 @@
 			};
 			open = false;
 		};
+		alsa =
+		{
+			enable = true;
+		};
 		cpu =
 		{
 			intel =
@@ -906,6 +1042,13 @@
 				members =
 				[
 					"git"
+				];
+			};
+			music =
+			{
+				members =
+				[
+					"mpd"
 				];
 			};
 		};
