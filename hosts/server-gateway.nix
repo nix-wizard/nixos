@@ -377,6 +377,7 @@
 					];
 					allowedUDPPorts =
 					[
+						51820
 					];
 				};
 				"enp1s0" =
@@ -485,6 +486,7 @@
 				exports =
 				''
 					/srv/share server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
+					/srv/share main-desktop.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 					/srv/server/servers/server1 server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 				'';
 			};
@@ -503,6 +505,7 @@
 					"/server-gateway.server-gateway/172.16.1.1"
 					"/server1.server-gateway/172.16.1.2"
 					"/server1-initrd.server-gateway/172.16.1.3"
+					"/main-desktop.server-gateway/172.16.1.4"
 				];
 			};
 		};
@@ -595,6 +598,7 @@
 					http2 = true;
 					locations =
 					{
+						/*
 						"~ ^/(media|proxy)" =
 						{
 							return = "404";
@@ -603,6 +607,11 @@
 						{
 							proxyPass = "http://172.16.1.2:80";
 							proxyWebsockets = true;
+						};
+						*/
+						"/" =
+						{
+							return ="410";
 						};
 					};
 					extraConfig =
@@ -618,6 +627,7 @@
 					http2 = true;
 					locations =
 					{
+						/*
 						"~ ^/(media|proxy)" =
 						{
 							proxyPass = "http://172.16.1.2:80";
@@ -637,6 +647,11 @@
 						"/" =
 						{
 							return = "404";
+						};
+						*/
+						"/" =
+						{
+							return = "410";
 						};
 					};
 					extraConfig =
@@ -668,6 +683,25 @@
 							proxyPass = "http://172.16.1.2:80";
 						};
 					};
+				};
+				"music.nixwiz.one" =
+				{
+					enableACME = true;
+					forceSSL = true;
+					http2 = true;
+					locations =
+					{
+						"/" =
+						{
+							proxyPass = "http://172.16.1.2:80";
+						};
+					};
+					extraConfig =
+					''
+						proxy_buffering off;
+						proxy_read_timeout 300s;
+						proxy_connect_timeout 300s;
+					'';
 				};
 			};
 		};
