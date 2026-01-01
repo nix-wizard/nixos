@@ -166,44 +166,21 @@
 				};
 			};
 		};
-		wireguard =
+		wg-quick =
 		{
 			interfaces =
 			{
-				wg0 =
-				{
-					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
-					mtu = 1280;
-					ips =
-					[
-						"172.16.0.4/24"
-					];
-					peers =
-					[
-						{
-							name = "nixlabs-vps";
-							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
-							allowedIPs =
-							[
-								"172.16.0.0/24"
-							];
-							endpoint = "74.113.97.90:51820";
-							persistentKeepalive = 25;
-						}
-					];
-				};
 				wg1 =
 				{
 					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
 					mtu = 1280;
-					ips =
+					address =
 					[
 						"172.16.1.4/24"
 					];
 					peers =
 					[
 						{
-							name = "server-gateway";
 							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
 							allowedIPs =
 							[
@@ -219,7 +196,6 @@
 		nameservers =
 		[
 			"172.16.1.1"
-			"9.9.9.9"
 		];
 	};
   	
@@ -318,8 +294,7 @@
 			options =
 			[
 				"_netdev"
-				"x-systemd.requires=wireguard-wg0-peer-nixlabs-vps.service"
-				"x-systemd.requires=wireguard-wg1-peer-server-gateway.service"
+				"x-systemd.requires=wg-quick-wg1.service"
 			];
 		};
 	};
