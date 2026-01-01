@@ -211,6 +211,20 @@
 				group = "root";
 				mode = "0600";
 			};
+			server1-music-htpasswd =
+			{
+				file = ../secrets/server1-music-htpasswd.age;
+				owner = "nginx";
+				group = "root";
+				mode = "0600";
+			};
+			server1-mpd-password =
+			{
+				file = ../secrets/server1-mpd-password.age;
+				owner = "50";
+				group = "50";
+				mode = "0444";
+			};
 		};
 	};
 
@@ -238,7 +252,7 @@
 			options =
 			[
 				"_netdev"
-				"x-systemd.requires=wireguard-wg1-peer-server-gateway.service"
+				"x-systemd.requires=wg-quick-wg1.service"
 			];
 		};
 		"/srv/server" =
@@ -248,7 +262,7 @@
 			options =
 			[
 				"_netdev"
-				"x-systemd.requires=wireguard-wg1-peer-server-gateway.service"
+				"x-systemd.requires=wg-quick-wg1.service"
 			];
 		};
 	};
@@ -297,13 +311,13 @@
 				];
 			};
 		};
-		wireguard =
+		wg-quick =
 		{
 			interfaces =
 			{
 				wg1 =
 				{
-					ips =
+					address =
 					[
 						"172.16.1.2/24"
 					];
@@ -312,7 +326,6 @@
 					peers =
 					[
 						{
-							name = "server-gateway";
 							publicKey = (builtins.readFile ../pubkeys/server-gateway-wireguard-public);
 							allowedIPs =
 							[
@@ -725,6 +738,11 @@
 					hostPath = "/srv/share/media/MUSIC";
 					isReadOnly = true;
 				};
+				"/var/lib/secrets/server1-mpd-password" =
+				{
+					hostPath = config.age.secrets.server1-mpd-password.path;
+					isReadOnly = false;
+				};
 			};
 			config =
 			{
@@ -776,6 +794,19 @@
 						{
 							listenAddress = "any";
 						};
+						credentials =
+						[
+							{
+								passwordFile = "/var/lib/secrets/server1-mpd-password";
+								permissions =
+								[
+									"read"
+									"add"
+									"control"
+									"admin"
+								];
+							}
+						];
 						extraConfig =
 						''
 							audio_output {
@@ -994,6 +1025,9 @@
 						proxy_buffering off;
 						proxy_read_timeout 300s;
 						proxy_connect_timeout 300s;
+
+						auth_basic "nixwiz music stream";
+						auth_basic_user_file ${toString config.age.secrets.server1-music-htpasswd.path};
 					'';
 				};
 			};
