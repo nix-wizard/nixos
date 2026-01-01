@@ -117,7 +117,7 @@
 						''
 							ip link add dev wg0 type wireguard
 
-							wg set wg0 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public)} endpoint 74.113.97.90:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
+							wg set wg0 private-key /etc/wireguard/server-gateway-initrd-wireguard-private peer ${builtins.replaceStrings ["\n"] [""] (builtins.readFile ../pubkeys/racknerd-vps-wireguard-public)} endpoint 107.174.108.42:51820 allowed-ips 172.16.0.0/24 persistent-keepalive 25
 
 							ip addr add 172.16.0.3/24 dev wg0
 							ip link set wg0 up
@@ -257,17 +257,6 @@
 			eno1 =
 			{
 				useDHCP = true;
-				ipv4 =
-				{
-					routes =
-					[
-						{
-							address = "74.113.97.90";
-							prefixLength = 32;
-							via = "192.168.0.1";
-						}
-					];
-				};
 			};
 			enp1s0 =
 			{
@@ -282,55 +271,42 @@
 					];
 				};
 			};
-			wg0 =
-			{
-				ipv4 =
-				{
-					addresses =
-					[
-						{
-							address = "172.16.0.2";
-							prefixLength = 24;
-						}
-					];
-				};
-			};
 		};
-		wireguard =
+		wg-quick =
 		{
 			interfaces =
 			{
 				wg0 =
 				{
+					address =
+					[
+						"172.16.0.2/24"
+					];
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
-					mtu = 1280;
 					peers =
 					[
 						{
-							name = "nixlabs-vps";
-							publicKey = (builtins.readFile ../pubkeys/nixlabs-vps-wireguard-public);
+							publicKey = (builtins.readFile ../pubkeys/racknerd-vps-wireguard-public);
 							allowedIPs =
 							[
 								"0.0.0.0/0"
 							];
-							endpoint = "74.113.97.90:51820";
+							endpoint = "107.174.108.42:51820";
 							persistentKeepalive = 25;
 						}
 					];
 				};
 				wg1 =
 				{
-					ips =
+					address =
 					[
 						"172.16.1.1/24"
 					];
 					listenPort = 51820;
-					mtu = 1280;
 					privateKeyFile = config.age.secrets.server-gateway-wireguard-private.path;
 					peers =
 					[
 						{
-							name = "server1";
 							publicKey = (builtins.readFile ../pubkeys/server1-wireguard-public);
 							allowedIPs =
 							[
@@ -338,7 +314,6 @@
 							];
 						}
 						{
-							name = "server1-initrd";
 							publicKey = (builtins.readFile ../pubkeys/server1-initrd-wireguard-public);
 							allowedIPs =
 							[
@@ -346,15 +321,14 @@
 							];
 						}
 						{
-							name = "nixwiz";
 							publicKey = (builtins.readFile ../pubkeys/nixwiz-wireguard-public);
 							allowedIPs =
 							[
 								"172.16.1.4/32"
+				
 							];
 						}
 						{
-							name = "nixwiz_phone";
 							publicKey = (builtins.readFile ../pubkeys/nixwiz_phone-wireguard-public);
 							allowedIPs =
 							[
@@ -397,9 +371,11 @@
 						80
 						443
 						2222
+						20000
 					];
 					allowedUDPPorts =
 					[
+						20000
 						51820
 					];
 				};
@@ -415,6 +391,7 @@
 						4001
 						4002
 						20048
+						7070
 					];
 					allowedUDPPorts =
 					[
@@ -429,6 +406,7 @@
 				};
 			};
 			allowPing = true;
+			checkReversePath = "loose";
 		};
 		nat =
 		{
@@ -467,13 +445,6 @@
 				PasswordAuthentication = false;
 				KbdInteractiveAuthentication = false;
 			};
-			listenAddresses =
-			[
-				{
-					addr = "172.16.1.1";
-					port = 22;
-				}
-			];
 		};
 		nfs =
 		{
@@ -498,7 +469,7 @@
 			{
 				server =
 				[
-					"172.16.0.1"
+					"9.9.9.9"
 				];
 				address =
 				[
@@ -507,6 +478,38 @@
 					"/server1-initrd.server-gateway/172.16.1.3"
 					"/main-desktop.server-gateway/172.16.1.4"
 				];
+			};
+		};
+		i2pd =
+		{
+			enable = true;
+			ifname = "eno1";
+			port = 20000;
+			ntcp2 =
+			{
+				enable = true;
+				published = true;
+				port = 20000;
+			};
+			ssu2 =
+			{
+				enable = true;
+				published = true;
+				port = 20000;
+			};
+			proto =
+			{
+				http =
+				{
+					enable = true;
+					hostname = "server-gateway.server-gateway";
+					address = "0.0.0.0";
+				};
+				socksProxy =
+				{
+					enable = true;
+					address = "0.0.0.0";
+				};
 			};
 		};
 		nginx =

@@ -34,6 +34,20 @@
 			(builtins.readFile ../pubkeys/server1.pub)
 		];
 	};
+	"server1-music-htpasswd.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/server1.pub)
+		];
+	};
+	"server1-mpd-password.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/server1.pub)
+		];
+	};
 	"main-desktop-wireguard-private.age" =
 	{
 		publicKeys =
