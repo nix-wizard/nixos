@@ -38,6 +38,7 @@
 			openssl
 			gnupg
 			busybox
+			nixfmt-rfc-style
 		];
 		variables =
 		{
@@ -90,11 +91,25 @@
 					{
 						keyFiles =
 						[
-							./pubkeys/nixwiz.pub
+							./pubkeys/nixwiz.pub # the glaring security hole created by making this global is mitigated by the fact that i will hang myself if the other end of this key gets leaked
 						];
 					};
 				};
 			};
+		};
+	};
+
+	fileSystems =
+	{
+		"/tmp" =
+		{
+			device = "tmpfs";
+			fsType = "tmpfs";
+			options =
+			[
+				"mode=1777"
+				"size=2G"
+			];
 		};
 	};
 
@@ -117,7 +132,7 @@
 	{
 		services =
 		{
-			"vconsole-fix" =
+			"vconsole-fix" = # this fucker has been required on a grand total of one device however it might theoretically potentailly maybe also be required for others so it's staying in common rather than main-desktop
 			{
 				wantedBy =
 				[

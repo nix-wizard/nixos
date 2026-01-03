@@ -1,15 +1,11 @@
 {
-	description = "nix flake";
+	description = "nixwiz sysnix";
 
 	inputs =
 	{
 		nixpkgs =
 		{
 			url = "github:nixos/nixpkgs?ref=nixos-unstable";
-		};
-		flake-utils =
-		{
-			url = "github:numtide/flake-utils";
 		};
 		agenix =
 		{
@@ -21,7 +17,6 @@
 	{
 		self,
 		nixpkgs,
-		flake-utils,
 		agenix
 	}:
 	{
@@ -32,7 +27,7 @@
 				system = "x86_64-linux";
 				modules =
 				[
-					./configuration.nix
+					./common.nix
 					./hosts/server-gateway.nix
 					agenix.nixosModules.default
 					(
@@ -57,7 +52,7 @@
 				system = "x86_64-linux";
 				modules =
 				[
-					./configuration.nix
+					./common.nix
 					./hosts/nixlabs-vps.nix
 					agenix.nixosModules.default
 					(
@@ -82,7 +77,7 @@
 				system = "x86_64-linux";
 				modules =
 				[
-					./configuration.nix
+					./common.nix
 					./hosts/server1.nix
 					agenix.nixosModules.default
 					(
@@ -107,7 +102,7 @@
 				system = "x86_64-linux";
 				modules =
 				[
-					./configuration.nix
+					./common.nix
 					./hosts/main-desktop.nix
 					agenix.nixosModules.default
 					(

@@ -170,10 +170,29 @@
 		{
 			interfaces =
 			{
+				wg0 =
+				{
+					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
+					address =
+					[
+						"172.16.0.4/24"
+					];
+					peers =
+					[
+						{
+							publicKey = (builtins.readFile ../pubkeys/racknerd-vps-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.0.0/24"
+							];
+							endpoint = "107.174.108.42:51820";
+							persistentKeepalive = 25;
+						}
+					];
+				};
 				wg1 =
 				{
 					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
-					mtu = 1280;
 					address =
 					[
 						"172.16.1.4/24"
@@ -186,7 +205,8 @@
 							[
 								"172.16.1.0/24"
 							];
-							endpoint = "192.168.0.152:51820";
+							endpoint = "192.168.0.152:51820"; # it took a lot of restraint to route here through my lan rather than across the width of the united states and back. the latter might be slightly more acceptable now because wg0's endpoint is somewhat geographically close to me now rather than in fucking tennessee
+							# who am i writing these comments for nobody looks at this. this is going on a private repo soon anyways
 							persistentKeepalive = 25;
 						}
 					];
@@ -356,13 +376,6 @@
 	{
 		config =
 		{
-			packageOverrides = pkgs:
-			{
-				nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/main.tar.gz")
-				{
-					inherit pkgs;
-				};
-			};
 			allowUnfree = true;
 		};
 		hostPlatform = lib.mkDefault "x86_64-linux";
