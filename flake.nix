@@ -127,7 +127,7 @@
 				system = "x86_64-linux";
 				modules =
 				[
-					./configuration.nix
+					./common.nix
 					./hosts/thinkpad-t530.nix
 					agenix.nixosModules.default
 					(

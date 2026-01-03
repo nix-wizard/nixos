@@ -135,6 +135,25 @@
 					[
 					];
 				};
+				"wg0" =
+				{
+					allowedTCPPorts =
+					[
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
+				"wg1" =
+				{
+					allowedTCPPorts =
+					[
+						22
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
 			};
 			allowPing = true;
 		};
@@ -210,6 +229,10 @@
 		openssh =
 		{
 			enable = true;
+			settings =
+			{
+				PermitRootLogin = "yes";
+			};
 		};
 		udisks2 =
 		{
