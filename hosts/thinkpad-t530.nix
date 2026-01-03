@@ -23,8 +23,8 @@
 		};
 		kernelModules =
 		[
-			"kvm-amd"
 			"unput"
+			"iwlwifi-7260-17"
 		];
 		initrd =
 		{
@@ -34,21 +34,20 @@
 				"usbcore"
 				"usb_storage"
 				"vfat"
-				"nls_cp437"
-				"nls_iso8859_1"
-				"nvidia"
 				"dm-snapshot"
 			];
 			availableKernelModules =
 			[
-				"nvme"
 				"xhci_pci"
+				"ehci_pci"
 				"ahci"
+				"firewire_ohci"
 				"usb_storage"
 				"usbhid"
 				"uas"
 				"sd_mod"
 				"sr_mod"
+				"sdhci_pci"
 			];
 			systemd =
 			{
@@ -60,7 +59,7 @@
 				{
 					cryptroot =
 					{
-						device = "/dev/nvme0n1p3";
+						device = "/dev/sda2";
 					};
 				};
 			};
@@ -85,23 +84,9 @@
 		{
 			enable = true;
 		};
-		nvidia =
-		{
-			modesetting =
-			{
-				enable = true;
-			};
-			powerManagement =
-			{
-				enable = false;
-				finegrained = false;
-			};
-			open = true;
-			nvidiaSettings = true;
-		};
 		cpu =
 		{
-			amd =
+			intel =
 			{
 				updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 			};
@@ -112,9 +97,9 @@
 	{
 		secrets =
 		{
-			main-desktop-wireguard-private =
+			thinkpad-t530-wireguard-private =
 			{
-				file = ../secrets/main-desktop-wireguard-private.age;
+				file = ../secrets/thinkpad-t530-wireguard-private.age;
 				owner = "root";
 				group = "root";
 				mode = "0600";
@@ -124,24 +109,27 @@
 	
 	networking =
 	{
-		hostName = "main-desktop";
+		hostName = "thinkpad-t530";
 		enableIPv6 = false;
 		useDHCP = false;
-		defaultGateway =
-		{
-			address = "10.0.0.1";
-			interface = "enp38s0";
-		};
 		firewall =
 		{
 			enable = true;
 			interfaces =
 			{
-				"enp38s0" =
+				"enp0s25" =
 				{
 					allowedTCPPorts =
 					[
-						22
+					];
+					allowedUDPPorts =
+					[
+					];
+				};
+				"wlp3s0" =
+				{
+					allowedTCPPorts =
+					[
 					];
 					allowedUDPPorts =
 					[
@@ -152,18 +140,9 @@
 		};
 		interfaces =
 		{
-			enp38s0 =
+			enp0s25 =
 			{
-				ipv4 =
-				{
-					addresses =
-					[
-						{
-							address = "10.0.0.2";
-							prefixLength = 24;
-						}
-					];
-				};
+				useDHCP = true;
 			};
 		};
 		wg-quick =
@@ -172,10 +151,10 @@
 			{
 				wg0 =
 				{
-					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
+					privateKeyFile = config.age.secrets.thinkpad-t530-wireguard-private.path;
 					address =
 					[
-						"172.16.0.4/24"
+						"172.16.0.6/24"
 					];
 					peers =
 					[
@@ -192,10 +171,10 @@
 				};
 				wg1 =
 				{
-					privateKeyFile = config.age.secrets.main-desktop-wireguard-private.path;
+					privateKeyFile = config.age.secrets.thinkpad-t530-wireguard-private.path;
 					address =
 					[
-						"172.16.1.4/24"
+						"172.16.1.6/24"
 					];
 					peers =
 					[
@@ -205,8 +184,7 @@
 							[
 								"172.16.1.0/24"
 							];
-							endpoint = "192.168.0.152:51820"; # it took a lot of restraint to route here through my lan rather than across the width of the united states and back. the latter might be slightly more acceptable now because wg0's endpoint is somewhat geographically close to me now rather than in fucking tennessee
-							# who am i writing these comments for nobody looks at this. this is going on a private repo soon anyways
+							endpoint = "172.16.0.2:51820";
 							persistentKeepalive = 25;
 						}
 					];
@@ -237,27 +215,6 @@
 		{
 			enable = true;
 		};
-		keyd =
-		{
-			enable = true;
-			keyboards =
-			{
-				default =
-				{
-					ids =
-					[
-						"*"
-					];
-					settings =
-					{
-						main =
-						{
-							rightalt = "layer(meta)";
-						};
-					};
-				};
-			};
-		};
 		pipewire =
 		{
 			enable = true;
@@ -271,7 +228,7 @@
 			enable = true;
 			videoDrivers =
 			[
-				"nvidia"
+				"intel"
 			];
 			windowManager =
 			{
@@ -288,6 +245,10 @@
 				};
 			};
 		};
+		automatic-timezoned =
+		{
+			enable = true;
+		};
 	};
 
 	fileSystems =
@@ -299,7 +260,7 @@
 		};
 		"/boot" =
 		{
-			device = "/dev/nvme0n1p1";
+			device = "/dev/sda1";
 			fsType = "vfat";
 			options =
 			[
@@ -314,6 +275,7 @@
 			options =
 			[
 				"_netdev"
+				"x-systemd.requires=wg-quick-wg0.service"
 				"x-systemd.requires=wg-quick-wg1.service"
 			];
 		};
@@ -336,19 +298,14 @@
 					"wheel"
 					"tty"
 					"video"
+					"share"
 					"input"
+					"networkmanager"
 				];
 			};
 		};
 		groups =
 		{
-			ssd =
-			{
-				members =
-				[
-					"nixwiz"
-				];
-			};
 			share =
 			{
 				members =
@@ -363,13 +320,7 @@
 	{
 		systemPackages = with pkgs;
 		[
-			exfatprogs
 		];
-	};
-
-	time =
-	{
-		timeZone = "America/Los_Angeles";
 	};
 
 	nixpkgs =

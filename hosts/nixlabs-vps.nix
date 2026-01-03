@@ -1,3 +1,5 @@
+# this is just here for sentimental value nixlabs is dead
+# maybe i can reuse this if i ever find a vps with a dc near la that actually lets me fucking install my own system
 {
 	config,
 	lib,

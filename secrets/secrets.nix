@@ -55,4 +55,11 @@
 			(builtins.readFile ../pubkeys/main-desktop.pub)
 		];
 	};
+	"thinkpad-t530-wireguard-private.age" =
+	{
+		publicKeys =
+		[
+			(builtins.readFile ../pubkeys/thinkpad-t530.pub)
+		];
+	};
 }
