@@ -321,7 +321,7 @@
 							];
 						}
 						{
-							publicKey = (builtins.readFile ../pubkeys/nixwiz-wireguard-public);
+							publicKey = (builtins.readFile ../pubkeys/main-desktop-wireguard-public);
 							allowedIPs =
 							[
 								"172.16.1.4/32"
@@ -329,10 +329,17 @@
 							];
 						}
 						{
-							publicKey = (builtins.readFile ../pubkeys/nixwiz_phone-wireguard-public);
+							publicKey = (builtins.readFile ../pubkeys/a54-5g-wireguard-public);
 							allowedIPs =
 							[
 								"172.16.1.5/32"
+							];
+						}
+						{
+							publicKey = (builtins.readFile ../pubkeys/thinkpad-t530-wireguard-public);
+							allowedIPs =
+							[
+								"172.16.1.6/32"
 							];
 						}
 					];
@@ -432,6 +439,20 @@
 				"d /srv/server 0755 root root -"
 			];
 		};
+		services =
+		{
+			nfs-server =
+			{
+				requires =
+				[
+					"dnsmasq.service"
+				];
+				after =
+				[
+					"dnsmasq.service"
+				];
+			};
+		};
 	};
 
 	services =
@@ -458,6 +479,7 @@
 				''
 					/srv/share server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 					/srv/share main-desktop.server-gateway(rw,sync,no_subtree_check,no_root_squash)
+					/srv/share thinkpad-t530.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 					/srv/server/servers/server1 server1.server-gateway(rw,sync,no_subtree_check,no_root_squash)
 				'';
 			};
@@ -477,6 +499,8 @@
 					"/server1.server-gateway/172.16.1.2"
 					"/server1-initrd.server-gateway/172.16.1.3"
 					"/main-desktop.server-gateway/172.16.1.4"
+					"/a54-5g.server-gateway/172.16.1.5"
+					"/thinkpad-t530.server-gateway/172.16.1.6"
 				];
 			};
 		};
